@@ -1,0 +1,5 @@
+*.so
+*.o
+*.i
+*.s
+test_list_vs_tree
