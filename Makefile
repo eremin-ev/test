@@ -3,7 +3,8 @@ WALL = -Wall
 CFLAGS = $(WALL) -O2 -g -Ilib $(DBG)
 LDLIBS = -lm
 
-bin = test_list_vs_tree
+bin =	test_line_point \
+	test_list_vs_tree
 
 all: $(bin) tags
 

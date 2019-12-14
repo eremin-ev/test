@@ -2,4 +2,6 @@
 *.o
 *.i
 *.s
+test_line_point
 test_list_vs_tree
+tags
