@@ -2,6 +2,8 @@
 *.o
 *.i
 *.s
+test_division_by_zero
 test_line_point
 test_list_vs_tree
+test_ref
 tags

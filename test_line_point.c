@@ -26,14 +26,14 @@ struct v2 {
 	real_t y;
 };
 
-real_t vec_len(struct v2 *A, struct v2 *B)
+static real_t vec_len(struct v2 *A, struct v2 *B)
 {
 	real_t dx = B->x - A->x;
 	real_t dy = B->y - A->y;
 	return sqrt(dx*dx + dy*dy);
 }
 
-real_t test_line_point(struct v2 *A, struct v2 *B,
+static real_t test_line_point(struct v2 *A, struct v2 *B,
 		struct v2 *P)
 {
 	return (P->x - A->x)*(B->y - A->y) - (P->y - A->y)*(B->x - A->x);
