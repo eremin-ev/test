@@ -1,7 +1,8 @@
-VPATH = lib
+src ?= .
+VPATH := $(VPATH) $(src)/lib
 WALL = -Wall
 #CFLAGS = -Wall -Werror
-CFLAGS = $(WALL) -O2 -g -Ilib $(DBG)
+CFLAGS = $(WALL) -O2 -g -I$(src)/lib $(DBG)
 CXXFLAGS = $(WALL) -O2 -g
 LDLIBS = -lm
 
