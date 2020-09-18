@@ -1,0 +1,10 @@
+#
+# A Makefile for outside build.  Usage:
+#
+#	mkdir -vp /tmp/m/build
+#	cd /tmp/m/build
+#	cp -v /home/eremin/write/test-github/Makefile.outside Makefile
+#	make src=/home/eremin/write/test-github
+#
+VPATH = $(src)
+include $(src)/Makefile
