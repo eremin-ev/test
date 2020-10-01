@@ -11,8 +11,10 @@ bin =	test_class_derivation \
 	test_line_point \
 	test_list_vs_tree \
 	test_map \
+	test_memmove \
 	test_pam \
-	test_ref
+	test_ref \
+	test_vector
 
 all: $(bin) tags
 
