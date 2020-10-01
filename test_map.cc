@@ -15,6 +15,7 @@ int main()
 		{ "one",	1 },
 		{ "null",	0 },
 		{ "three",	3 },
+		{ "seven",	7 },
 	};
 
 	//std::map<std::string,int> m2 = {
