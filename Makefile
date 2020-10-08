@@ -8,12 +8,17 @@ LDLIBS = -lm
 
 bin =	test_class_derivation \
 	test_division_by_zero \
+	test_fanotify \
+	test_inotify \
+	test_keyval \
 	test_line_point \
 	test_list_vs_tree \
 	test_map \
 	test_memmove \
+	test_page \
 	test_pam \
 	test_ref \
+	test_sizeof \
 	test_vector
 
 all: $(bin) tags
@@ -21,6 +26,9 @@ all: $(bin) tags
 test_list_vs_tree: rbtree.o
 
 test_pam: LDLIBS += -lpam -lpam_misc
+
+test_keyval: CFLAGS += -I$(src)/lib
+test_keyval: keyval.o
 
 tags:
 	ctags -R .
