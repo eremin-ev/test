@@ -22,6 +22,8 @@ void *my_memmove(void *dest, const void *src, size_t n)
 			d[i] = s[i];
 		}
 	}
+
+	return 0;
 }
 
 int main(void)
@@ -36,8 +38,13 @@ int main(void)
 	}
 	printf("\n");
 
-	//my_memmove(b, a, 10);
-	memcpy(b, a, 10);
+	/*
+	 * Try 'memcpy(b, a, 10);' instead of this to get a warning:
+	 *
+	 * test_memmove.c:42:2: warning: ‘memcpy’ accessing 10 bytes at
+	 * 	offsets 1 and 0 overlaps 9 bytes at offset 1 [-Wrestrict]
+	 */
+	my_memmove(b, a, 10);
 
 	for (i = 0; i < 10; i++) {
 		printf("%c ", b[i]);
