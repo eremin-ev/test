@@ -19,6 +19,7 @@ bin =	test_class_derivation \
 	test_pam \
 	test_ref \
 	test_sizeof \
+	test_substr_cnt \
 	test_vector
 
 all: $(bin) tags
