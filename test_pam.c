@@ -3,36 +3,57 @@
  * Version 2.  See the file COPYING for more details.
  */
 
-//
-// To build:
-//
-//      gcc pam_password.c -lpam
-//
-// To get PAM development library:
-//
-//      sudo apt-get install libpam-dev
-//
-//
-
-#include <security/pam_appl.h>
-//#include <security/pam_misc.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <security/pam_appl.h>
+
+static const char *msg_type_str(int t)
+{
+	const char *s = "<unknown>";
+
+	switch (t) {
+	case PAM_PROMPT_ECHO_OFF: s = "PAM_PROMPT_ECHO_OFF"; break;
+	case PAM_PROMPT_ECHO_ON: s = "PAM_PROMPT_ECHO_ON"; break;
+	case PAM_ERROR_MSG: s = "PAM_ERROR_MSG"; break;
+	case PAM_TEXT_INFO: s = "PAM_TEXT_INFO"; break;
+	}
+
+	return s;
+}
 
 int conv_cb(int num_msg, const struct pam_message **msg,
 	    struct pam_response **resp, void *user_data_ptr)
 {
-	const char *passwd = user_data_ptr;
+	const int passwd_len = 128;
+	char *passwd_str;
+	int r;
 
-	printf("%s num_msg: %i\n", __func__, num_msg);
+	printf("%s num_msg: %i, user_data_ptr %p\n", __func__,
+		num_msg, user_data_ptr);
 
 	/* pam_conv */
 	if (num_msg == 1) {
-		printf("%s %s\n", __func__, (*msg)->msg);
-		*resp = malloc(1 * sizeof(struct pam_response));
-		(*resp)->resp_retcode = 0;
-		(*resp)->resp = strdup(passwd);
+		printf("%s %s '%s'\n", __func__,
+			msg_type_str((*msg)->msg_style), (*msg)->msg);
+		/* Handle password passing */
+		if (!strcmp((*msg)->msg, "Password: ")) {
+			*resp = malloc(num_msg * sizeof(struct pam_response));
+			passwd_str = malloc(passwd_len);
+			r = read(0, passwd_str, passwd_len);
+			if (r == -1) {
+				printf("%s: %s\n", __func__, strerror(errno));
+				exit(EXIT_FAILURE);
+			}
+			passwd_str[r] = '\0';
+			printf("%s r %i, passwd '%s'\n", __func__, r, passwd_str);
+			(*resp)->resp_retcode = 0;
+			(*resp)->resp = passwd_str;
+
+			/* NOTE: no free(passwd_str) since PAM will free it */
+		}
 	}
 
 	return PAM_SUCCESS;
@@ -40,19 +61,15 @@ int conv_cb(int num_msg, const struct pam_message **msg,
 
 int main(int argc, char** argv)
 {
-	if (argc < 3) {
-		fprintf(stderr,
-			"Usage: %s <username> <password>\n"
-			"(use a space before command to avoid storing "
-				"<password> to the Bash history)\n",
+	if (argc < 2) {
+		printf(	"Usage: %s <username>\n"
+			"(please enter <password>^D afterwards)\n",
 			argv[0]);
 		return 1;
 	}
 
 	const char *user = argv[1];
-	const char *passwd = argv[2];
-	struct pam_conv pam_conv = { conv_cb, (void *)passwd };
-	//struct pam_conv pam_conv = { misc_conv, NULL };
+	struct pam_conv pam_conv = { conv_cb, NULL };
 	pam_handle_t *pamh;
 
 	int res = pam_start("login", user, &pam_conv, &pamh);
@@ -65,14 +82,9 @@ int main(int argc, char** argv)
 		res = pam_acct_mgmt(pamh, 0);
 	}
 
-	if (res == PAM_SUCCESS) {
-		fprintf(stdout, "Authenticated.\n");
-	}
-	else {
-		fprintf(stdout, "Not Authenticated.\n");
-	}
+	printf("%sAuthenticated.\n", res == PAM_SUCCESS ? "" : "Not ");
 
 	pam_end(pamh, res);
 
-	return res == PAM_SUCCESS ? 0 : 1;
+	return res == PAM_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
 }
