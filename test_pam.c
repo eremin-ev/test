@@ -59,32 +59,40 @@ int conv_cb(int num_msg, const struct pam_message **msg,
 	return PAM_SUCCESS;
 }
 
-int main(int argc, char** argv)
+int do_auth(const char *user)
 {
+	struct pam_conv pam_conv = { conv_cb, NULL };
+	pam_handle_t *pamh;
+
+	int ret = pam_start("login", user, &pam_conv, &pamh);
+
+	if (ret == PAM_SUCCESS) {
+		ret = pam_authenticate(pamh, 0);
+	}
+
+	if (ret == PAM_SUCCESS) {
+		ret = pam_acct_mgmt(pamh, 0);
+	}
+
+	pam_end(pamh, ret);
+
+	return ret;
+}
+
+int main(int argc, char **argv)
+{
+	int ret;
+
 	if (argc < 2) {
 		printf(	"Usage: %s <username>\n"
 			"(please enter <password>^D afterwards)\n",
 			argv[0]);
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	const char *user = argv[1];
-	struct pam_conv pam_conv = { conv_cb, NULL };
-	pam_handle_t *pamh;
+	ret = do_auth(argv[1]);
 
-	int res = pam_start("login", user, &pam_conv, &pamh);
+	printf("%sAuthenticated.\n", ret == PAM_SUCCESS ? "" : "Not ");
 
-	if (res == PAM_SUCCESS) {
-		res = pam_authenticate(pamh, 0);
-	}
-
-	if (res == PAM_SUCCESS) {
-		res = pam_acct_mgmt(pamh, 0);
-	}
-
-	printf("%sAuthenticated.\n", res == PAM_SUCCESS ? "" : "Not ");
-
-	pam_end(pamh, res);
-
-	return res == PAM_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
+	return ret == PAM_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
 }

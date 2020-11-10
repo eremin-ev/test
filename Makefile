@@ -17,6 +17,7 @@ bin =	test_class_derivation \
 	test_memmove \
 	test_page \
 	test_pam \
+	test_ptr_array \
 	test_ref \
 	test_sizeof \
 	test_substr_cnt \
@@ -26,7 +27,7 @@ all: $(bin) tags
 
 test_list_vs_tree: rbtree.o
 
-test_pam: LDLIBS += -lpam -lpam_misc
+test_pam: LDLIBS += -lpam
 
 test_keyval: CFLAGS += -I$(src)/lib
 test_keyval: keyval.o
