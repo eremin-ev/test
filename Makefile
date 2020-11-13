@@ -21,7 +21,8 @@ bin =	test_class_derivation \
 	test_ref \
 	test_sizeof \
 	test_substr_cnt \
-	test_vector
+	test_vector \
+	test_read
 
 all: $(bin) tags
 
