@@ -13,7 +13,7 @@
 
 int main()
 {
-	char buf[1024];
+	unsigned char buf[1024];
 	int fd;
 	int r;
 
