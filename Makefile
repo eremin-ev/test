@@ -1,7 +1,7 @@
 src ?= .
 VPATH := $(VPATH) $(src)/lib
 WALL = -Wall -Wextra
-#WERROR = -Werror
+WERROR = -Werror
 #DBG = -O0 -g
 DBG ?= -O2 -g
 CFLAGS = $(WALL) $(WERROR) $(DBG) -I$(src)/lib
