@@ -40,7 +40,7 @@ static int test_substr_cnt(unsigned c1, unsigned c2)
 
 	o = buf1;
 
-	while (o - buf1 < sizeof(buf1)) {
+	while ((long unsigned int)(o - buf1) < sizeof(buf1)) {
 		o += snprintf(o, sizeof(buf1) - (o - buf1), "%08x", c1);
 	}
 

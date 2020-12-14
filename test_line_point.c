@@ -41,7 +41,7 @@ static real_t test_line_point(struct v2 *A, struct v2 *B,
 
 int main(void)
 {
-	int i, j;
+	unsigned i, j;
 	real_t len, sign;
 
 	struct v2 a[] = {
