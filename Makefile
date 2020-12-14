@@ -37,6 +37,8 @@ test_list_vs_tree: rbtree.o
 test_pam: LDLIBS += -lpam
 test_pam_helper: LDLIBS += -lpam
 
+test_pipe: spawn-child.o
+
 test_keyval: CFLAGS += -I$(src)/lib
 test_keyval: keyval.o
 
