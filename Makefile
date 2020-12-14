@@ -20,6 +20,7 @@ bin =	test_division_by_zero \
 	test_op \
 	test_page \
 	test_pam \
+	test_pam_spawn \
 	test_pam_helper \
 	test_pipe \
 	test_pipe_child \
@@ -38,6 +39,8 @@ test_pam: LDLIBS += -lpam
 test_pam_helper: LDLIBS += -lpam
 
 test_pipe: spawn-child.o
+
+test_pam_spawn: spawn-child.o
 
 test_keyval: CFLAGS += -I$(src)/lib
 test_keyval: keyval.o

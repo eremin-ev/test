@@ -5,10 +5,15 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
 #include <unistd.h>
+#include <syslog.h>
+#include <pwd.h>
 #include <security/pam_appl.h>
+
+#define PAM_TEST_HELPER		"test_pam_helper"
 
 enum reply_type {
 	REP_PASSWD =		1U << 0,
@@ -21,6 +26,18 @@ enum req_type {
 	REQ_AUTH =		1U,
 	REQ_CHTOK =		2U
 };
+
+__attribute__((__format__ (printf, 2, 3)))
+static void helper_log(int prio, const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	openlog(PAM_TEST_HELPER, LOG_CONS | LOG_PID, LOG_AUTHPRIV);
+	vsyslog(prio, fmt, args);
+	va_end(args);
+	closelog();
+}
 
 static const char *msg_type_str(int t)
 {
@@ -122,7 +139,6 @@ static int do_auth(pam_handle_t *pamh)
 	int r;
 
 	r = pam_authenticate(pamh, 0);
-	printf("%s pam_authenticate() r %i\n", __func__, r);
 
 	if (r != PAM_SUCCESS) {
 		printf("%s pam_authenticate() r %i: %s\n", __func__,
@@ -156,7 +172,6 @@ static int do_pam(const char *user, enum req_type req_type)
 	pam_handle_t *pamh;
 
 	int r = pam_start("login", user, &pam_conv, &pamh);
-	printf("%s pam_start() r %i\n", __func__, r);
 
 	if (r != PAM_SUCCESS) {
 		printf("%s pam_start() r %i: %s\n", __func__,	
@@ -185,21 +200,45 @@ int main(int argc, char **argv)
 {
 	int r;
 
-	if (argc < 3) {
-		printf(	"Usage: %s <username> <auth>|<chtok>\n"
-			"(please enter <password>^D afterwards)\n",
-			argv[0]);
-		return EXIT_FAILURE;
+	/*
+	 * we establish that this program is running with non-tty stdin.
+	 * this is to discourage casual use. It does *NOT* prevent an
+	 * intruder from repeatadly running this program to determine the
+	 * password of the current user (brute force attack, but one for
+	 * which the attacker must already have gained access to the user's
+	 * account).
+	 */
+
+	if (isatty(STDIN_FILENO) || argc != 2 ) {
+		helper_log(LOG_NOTICE,
+			"inappropriate use of %s [UID=%d]",
+			PAM_TEST_HELPER,
+			getuid());
+		fprintf(stderr,
+		"This binary is not designed for running in this way\n"
+		      "-- the system administrator has been informed\n");
+		sleep(10);	/* this should discourage/annoy the user */
+		return PAM_SYSTEM_ERR;
 	}
 
-	printf("uid %i, euid %i\n", getuid(), geteuid());
+	struct passwd *pw = getpwuid(getuid());
+	if (!pw) {
+		helper_log(LOG_NOTICE, "Cannot retrieve info for uid %d",
+			getuid());
+		return PAM_AUTHTOK_ERR;
+	}
 
-	if (!strcmp(argv[2], "auth")) {
-		r = do_pam(argv[1], REQ_AUTH);
-		printf("%sAuthenticated.\n", r == PAM_SUCCESS ? "" : "Not ");
-	} else if (!strcmp(argv[2], "chtok")) {
-		r = do_pam(argv[1], REQ_CHTOK);
-		printf("%sChanged auth token.\n", r == PAM_SUCCESS ? "Successfuly" : "Failed ");
+	helper_log(LOG_NOTICE, "uid %i, euid %i, user '%s'\n",
+		getuid(), geteuid(), pw->pw_name);
+
+	if (!strcmp(argv[1], "auth")) {
+		r = do_pam(pw->pw_name, REQ_AUTH);
+		helper_log(LOG_NOTICE, "%sAuthenticated.\n",
+			r == PAM_SUCCESS ? "" : "Not ");
+	} else if (!strcmp(argv[1], "chtok")) {
+		r = do_pam(pw->pw_name, REQ_CHTOK);
+		helper_log(LOG_NOTICE, "%sChanged auth token.\n",
+			r == PAM_SUCCESS ? "Successfuly" : "Failed ");
 	} else {
 		r = PAM_AUTH_ERR;
 		printf("Unknown request: %s\n", argv[2]);

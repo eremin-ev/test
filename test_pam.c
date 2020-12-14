@@ -185,126 +185,6 @@ static int do_pam(const char *user, enum req_type req_type)
 	return r;
 }
 
-static int pam_modutil_read(int fd, char *buffer, int count)
-{
-       int block, offset = 0;
-
-       while (count > 0) {
-               block = read(fd, &buffer[offset], count);
-
-               if (block < 0) {
-                       if (errno == EINTR) continue;
-                       return block;
-               }
-               if (block == 0) return offset;
-
-               offset += block;
-               count -= block;
-       }
-
-       return offset;
-}
-
-int run_helper_binary(const char *user)
-{
-	int retval=0, child, fds[2];
-	struct sigaction newsa, oldsa;
-
-	printf("%s\n", __func__);
-
-	/* create a pipe for the messages */
-	if (pipe(fds) != 0) {
-		printf("could not create a pipe\n");
-		return PAM_AUTH_ERR;
-	}
-
-	/*
-	 * This code arranges that the demise of the child does not cause
-	 * the application to receive a signal it is not expecting - which
-	 * may kill the application or worse.
-	 *
-	 * The "noreap" module argument is provided so that the admin can
-	 * override this behavior.
-	 */
-	memset(&newsa, '\0', sizeof(newsa));
-	newsa.sa_handler = SIG_DFL;
-	sigaction(SIGCHLD, &newsa, &oldsa);
-
-	/* fork */
-	child = fork();
-	if (child == 0) {
-		static char *envp[] = { NULL };
-		const char *args[] = { NULL, NULL, NULL, NULL };
-
-		/* XXX - should really tidy up PAM here too */
-
-		/* reopen stdout as pipe */
-		if (dup2(fds[1], STDOUT_FILENO) != STDOUT_FILENO) {
-			printf("%s dup2 of %s failed: %m", __func__, "stdout");
-			_exit(PAM_AUTHINFO_UNAVAIL);
-		}
-
-		if (geteuid() == 0) {
-			/* must set the real uid to 0 so the helper will not error
-			   out if pam is called from setuid binary (su, sudo...) */
-			if (setuid(0) == -1) {
-				printf("%s setuid failed: %m", __func__);
-				printf("-1\n");
-				fflush(stdout);
-				_exit(PAM_AUTHINFO_UNAVAIL);
-			}
-		}
-
-		/* exec binary helper */
-		args[0] = TEST_PAM_HELPER;
-		args[1] = user;
-		args[2] = "chkexpiry";
-
-		execve(TEST_PAM_HELPER, (char *const *) args, envp);
-
-		printf("%s helper binary execve failed: %m", __func__);
-		/* should not get here: exit with error */
-		printf("-1\n");
-		fflush(stdout);
-		_exit(PAM_AUTHINFO_UNAVAIL);
-	} else {
-		close(fds[1]);
-		if (child > 0) {
-			char buf[32];
-			int rc = 0;
-			/* wait for helper to complete: */
-			while ((rc=waitpid(child, &retval, 0)) < 0 && errno == EINTR);
-			if (rc<0) {
-				printf("%s unix_chkpwd waitpid returned %d: %m", __func__, rc);
-				retval = PAM_AUTH_ERR;
-			} else if (!WIFEXITED(retval)) {
-				printf("%s unix_chkpwd abnormal exit: %d", __func__, retval);
-				retval = PAM_AUTH_ERR;
-			} else {
-				retval = WEXITSTATUS(retval);
-				rc = pam_modutil_read(fds[0], buf, sizeof(buf) - 1);
-				if(rc > 0) {
-					buf[rc] = '\0';
-					printf("%s From child: '%s'\n", __func__, buf);
-				} else {
-					printf("%s read unix_chkpwd output error %d: %m", __func__, rc);
-					retval = PAM_AUTH_ERR;
-				}
-			}
-		} else {
-			printf("%s Fork failed: %m\n", __func__);
-			retval = PAM_AUTH_ERR;
-		}
-		close(fds[0]);
-	}
-
-	/* restore old signal handler */
-	sigaction(SIGCHLD, &oldsa, NULL);
-
-	printf("%s Returning %d\n ", __func__, retval);
-	return retval;
-}
-
 int main(int argc, char **argv)
 {
 	int r;
@@ -318,19 +198,15 @@ int main(int argc, char **argv)
 
 	printf("uid %i, euid %i\n", getuid(), geteuid());
 
-	r = run_helper_binary(argv[1]);
-
-	if (0) {
-		if (!strcmp(argv[2], "auth")) {
-			r = do_pam(argv[1], REQ_AUTH);
-			printf("%sAuthenticated.\n", r == PAM_SUCCESS ? "" : "Not ");
-		} else if (!strcmp(argv[2], "chtok")) {
-			r = do_pam(argv[1], REQ_CHTOK);
-			printf("%sChanged auth token.\n", r == PAM_SUCCESS ? "Successfuly" : "Failed ");
-		} else {
-			r = PAM_AUTH_ERR;
-			printf("Unknown request: %s\n", argv[2]);
-		}
+	if (!strcmp(argv[2], "auth")) {
+		r = do_pam(argv[1], REQ_AUTH);
+		printf("%sAuthenticated.\n", r == PAM_SUCCESS ? "" : "Not ");
+	} else if (!strcmp(argv[2], "chtok")) {
+		r = do_pam(argv[1], REQ_CHTOK);
+		printf("%sChanged auth token.\n", r == PAM_SUCCESS ? "Successfuly" : "Failed ");
+	} else {
+		r = PAM_AUTH_ERR;
+		printf("Unknown request: %s\n", argv[2]);
 	}
 
 	return r == PAM_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
