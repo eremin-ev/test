@@ -53,85 +53,88 @@ static const char *msg_type_str(int t)
 	return s;
 }
 
-static char *read_from_stdin()
+struct pam_msg_rp {
+	int rep_len;
+	char *rep_str;
+};
+
+static int read_from_parent(struct pam_msg_rp *rp)
 {
 	int r;
-	int passwd_len = 128;
-	char *passwd_str = malloc(passwd_len);
-	r = read(0, passwd_str, passwd_len);
-	if (r == -1) {
-		printf("%s: %s\n", __func__, strerror(errno));
-		return NULL;
-	}
-	passwd_str[r] = '\0';
-	printf("%s r %i, passwd '%s'\n", __func__, r, passwd_str);
 
-	return passwd_str;
+	r = read(STDIN_FILENO, &rp->rep_len, sizeof(rp->rep_len));
+	helper_log(LOG_NOTICE, "%s OK r %d rep_len %d", __func__, r, rp->rep_len);
+
+	rp->rep_str = malloc(rp->rep_len);
+	r = read(STDIN_FILENO, rp->rep_str, rp->rep_len);
+	if (r == -1) {
+		helper_log(LOG_NOTICE, "%s: %s", __func__, strerror(errno));
+		return 0;
+	}
+	rp->rep_str[r] = '\0';
+	helper_log(LOG_NOTICE, "%s r %i, rep_str '%s'", __func__, r, rp->rep_str);
+
+	return r;
 }
 
-static int conv_handle_resp(struct pam_response **resp, unsigned rep_flags)
+static int conv_handle_resp(struct pam_response **resp)
 {
-	char *passwd_str;
+	int r;
+	unsigned i;
+	struct pam_msg_rp rp;
+	unsigned rep_nr;
 
-	if (rep_flags & REP_PASSWD
-			|| rep_flags & REP_PASSWD_CURRENT
-			|| rep_flags & REP_PASSWD_NEW
-			|| rep_flags & REP_PASSWD_RETYPE) {
-		*resp = malloc(sizeof(struct pam_response));
-		passwd_str = read_from_stdin();
-		if (passwd_str == NULL) {
-			return PAM_BUF_ERR;
+	r = read(STDIN_FILENO, &rep_nr, sizeof(rep_nr));
+	helper_log(LOG_NOTICE, "%s OK r %d rep_nr %d", __func__, r, rep_nr);
+
+	if (rep_nr) {
+		*resp = malloc(rep_nr * sizeof(struct pam_response));
+
+		for (i = 0; i < rep_nr; i++) {
+			r = read_from_parent(&rp);
+			if (!r) {
+				return PAM_BUF_ERR;
+			}
+			resp[i]->resp_retcode = 0;
+			resp[i]->resp = rp.rep_str;
+
+			helper_log(LOG_NOTICE, "%s OK rep_str '%s:%d'",
+				__func__, rp.rep_str, rp.rep_len);
+
+			/* NOTE: no free(rep_str) since PAM will free it */
 		}
-		(*resp)->resp_retcode = 0;
-		(*resp)->resp = passwd_str;
-
-		/* NOTE: no free(passwd_str) since PAM will free it */
 	}
 
 	return PAM_SUCCESS;
 }
 
+int write_msg(int msg_len, const struct pam_message *msg)
+{
+	write(STDOUT_FILENO, &msg->msg_style, sizeof(msg->msg_style));
+	write(STDOUT_FILENO, &msg_len, sizeof(msg_len));
+	write(STDOUT_FILENO, msg->msg, msg_len);
+	return 0;
+}
+
 static int conv_cb(int num_msg, const struct pam_message **msg,
 	    struct pam_response **resp, void *user_data_ptr)
 {
-	unsigned rep_flags = 0;
+	unsigned msg_len;
 	int i;
 
-	printf("%s num_msg: %i, user_data_ptr %p\n", __func__,
+	helper_log(LOG_NOTICE, "%s num_msg: %i, user_data_ptr %p\n", __func__,
 		num_msg, user_data_ptr);
 
-	/* pam_conv */
-	if (num_msg == 1) {
-		printf("%s %s '%s'\n", __func__,
-			msg_type_str((*msg)->msg_style), (*msg)->msg);
-		if ((*msg)->msg_style == PAM_PROMPT_ECHO_OFF &&
-				!strcmp((*msg)->msg, "Password: ")) {
-			rep_flags |= REP_PASSWD;
-		}
-
-		if ((*msg)->msg_style == PAM_PROMPT_ECHO_OFF &&
-				!strcmp((*msg)->msg, "Current password: ")) {
-			rep_flags |= REP_PASSWD_RETYPE;
-		}
-
-		if ((*msg)->msg_style == PAM_PROMPT_ECHO_OFF &&
-				!strcmp((*msg)->msg, "New password: ")) {
-			rep_flags |= REP_PASSWD_NEW;
-		}
-
-		if ((*msg)->msg_style == PAM_PROMPT_ECHO_OFF &&
-				!strcmp((*msg)->msg, "Retype new password: ")) {
-			rep_flags |= REP_PASSWD_RETYPE;
-		}
-	} else {
-		printf("%s more than one message in reply, skipping...", __func__);
-		for (i = 0; i < num_msg; i++) {
-			printf("%s %i %s '%s'\n", __func__,
-				i, msg_type_str(msg[i]->msg_style), msg[i]->msg);
-		}
+	write(STDOUT_FILENO, &num_msg, sizeof(num_msg));
+	for (i = 0; i < num_msg; i++) {
+		msg_len = strlen(msg[i]->msg);
+		helper_log(LOG_NOTICE, "%s %i %s '%s:%d'\n", __func__,
+			i, msg_type_str(msg[i]->msg_style),
+			msg[i]->msg, msg_len);
+		write_msg(msg_len, msg[i]);
 	}
 
-	return conv_handle_resp(resp, rep_flags);
+	return conv_handle_resp(resp);
 }
 
 static int do_auth(pam_handle_t *pamh)
@@ -141,13 +144,13 @@ static int do_auth(pam_handle_t *pamh)
 	r = pam_authenticate(pamh, 0);
 
 	if (r != PAM_SUCCESS) {
-		printf("%s pam_authenticate() r %i: %s\n", __func__,
-			r, pam_strerror(pamh, r));
+		helper_log(LOG_NOTICE, "%s pam_authenticate() r %i: %s",
+			__func__, r, pam_strerror(pamh, r));
 		return r;
 	}
 
 	r = pam_acct_mgmt(pamh, 0);
-	printf("%s pam_acct_mgmt() ret %i\n", __func__, r);
+	helper_log(LOG_NOTICE, "%s pam_acct_mgmt() ret %i", __func__, r);
 
 	return r;
 }
@@ -155,11 +158,11 @@ static int do_auth(pam_handle_t *pamh)
 static int do_chtok(pam_handle_t *pamh, unsigned flags)
 {
 	int r = pam_chauthtok(pamh, flags);
-	printf("%s pam_chauthtok() r %i\n", __func__, r);
+	helper_log(LOG_NOTICE, "%s pam_chauthtok() r %i", __func__, r);
 
 	if (r != PAM_SUCCESS) {
-		printf("%s pam_chauthtok() r %i: %s\n", __func__,	
-			r, pam_strerror(pamh, r));
+		helper_log(LOG_NOTICE, "%s pam_chauthtok() r %i: %s",
+			__func__, r, pam_strerror(pamh, r));
 		return r;
 	}
 
@@ -174,8 +177,8 @@ static int do_pam(const char *user, enum req_type req_type)
 	int r = pam_start("login", user, &pam_conv, &pamh);
 
 	if (r != PAM_SUCCESS) {
-		printf("%s pam_start() r %i: %s\n", __func__,	
-			r, pam_strerror(pamh, r));
+		helper_log(LOG_NOTICE, "%s pam_start() r %i: %s",
+			__func__, r, pam_strerror(pamh, r));
 		return r;
 	}
 
@@ -183,7 +186,7 @@ static int do_pam(const char *user, enum req_type req_type)
 	case REQ_AUTH:
 		r = do_auth(pamh);
 		if (r == PAM_NEW_AUTHTOK_REQD) {
-			do_chtok(pamh, PAM_CHANGE_EXPIRED_AUTHTOK);
+			r = do_chtok(pamh, PAM_CHANGE_EXPIRED_AUTHTOK);
 		}
 		break;
 	case REQ_CHTOK:
@@ -192,6 +195,10 @@ static int do_pam(const char *user, enum req_type req_type)
 	}
 
 	pam_end(pamh, r);
+
+	/* send a message to parent that conversation is over */
+	int t = 0;
+	write(STDOUT_FILENO, &t, sizeof(t));
 
 	return r;
 }
@@ -228,20 +235,20 @@ int main(int argc, char **argv)
 		return PAM_AUTHTOK_ERR;
 	}
 
-	helper_log(LOG_NOTICE, "uid %i, euid %i, user '%s'\n",
+	helper_log(LOG_NOTICE, "uid %i, euid %i, user '%s'",
 		getuid(), geteuid(), pw->pw_name);
 
 	if (!strcmp(argv[1], "auth")) {
 		r = do_pam(pw->pw_name, REQ_AUTH);
-		helper_log(LOG_NOTICE, "%sAuthenticated.\n",
+		helper_log(LOG_NOTICE, "%sAuthenticated.",
 			r == PAM_SUCCESS ? "" : "Not ");
 	} else if (!strcmp(argv[1], "chtok")) {
 		r = do_pam(pw->pw_name, REQ_CHTOK);
-		helper_log(LOG_NOTICE, "%sChanged auth token.\n",
-			r == PAM_SUCCESS ? "Successfuly" : "Failed ");
+		helper_log(LOG_NOTICE, "%sChanged auth token.",
+			r == PAM_SUCCESS ? "Successfully " : "Not ");
 	} else {
 		r = PAM_AUTH_ERR;
-		printf("Unknown request: %s\n", argv[2]);
+		helper_log(LOG_NOTICE, "Unknown request: %s", argv[2]);
 	}
 
 	return r == PAM_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
