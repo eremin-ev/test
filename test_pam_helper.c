@@ -13,19 +13,9 @@
 #include <pwd.h>
 #include <security/pam_appl.h>
 
+#include "test_pam_spawn.h"
+
 #define PAM_TEST_HELPER		"test_pam_helper"
-
-enum reply_type {
-	REP_PASSWD =		1U << 0,
-	REP_PASSWD_CURRENT =	1U << 1,
-	REP_PASSWD_NEW =	1U << 2,
-	REP_PASSWD_RETYPE =	1U << 3,
-};
-
-enum req_type {
-	REQ_AUTH =		1U,
-	REQ_CHTOK =		2U
-};
 
 __attribute__((__format__ (printf, 2, 3)))
 static void helper_log(int prio, const char *fmt, ...)
@@ -52,11 +42,6 @@ static const char *msg_type_str(int t)
 
 	return s;
 }
-
-struct pam_msg_rp {
-	int rep_len;
-	char *rep_str;
-};
 
 static int read_from_parent(struct pam_msg_rp *rp)
 {
@@ -108,7 +93,7 @@ static int conv_handle_resp(struct pam_response **resp)
 	return PAM_SUCCESS;
 }
 
-int write_msg(int msg_len, const struct pam_message *msg)
+static int write_msg(int msg_len, const struct pam_message *msg)
 {
 	write(STDOUT_FILENO, &msg->msg_style, sizeof(msg->msg_style));
 	write(STDOUT_FILENO, &msg_len, sizeof(msg_len));
@@ -120,11 +105,13 @@ static int conv_cb(int num_msg, const struct pam_message **msg,
 	    struct pam_response **resp, void *user_data_ptr)
 {
 	unsigned msg_len;
+	int cmd = CMD_CONV;
 	int i;
 
 	helper_log(LOG_NOTICE, "%s num_msg: %i, user_data_ptr %p\n", __func__,
 		num_msg, user_data_ptr);
 
+	write(STDOUT_FILENO, &cmd, sizeof(cmd));
 	write(STDOUT_FILENO, &num_msg, sizeof(num_msg));
 	for (i = 0; i < num_msg; i++) {
 		msg_len = strlen(msg[i]->msg);
@@ -169,18 +156,9 @@ static int do_chtok(pam_handle_t *pamh, unsigned flags)
 	return r;
 }
 
-static int do_pam(const char *user, enum req_type req_type)
+static int do_pam_type(pam_handle_t *pamh, enum req_type req_type)
 {
-	struct pam_conv pam_conv = { conv_cb, NULL };
-	pam_handle_t *pamh;
-
-	int r = pam_start("login", user, &pam_conv, &pamh);
-
-	if (r != PAM_SUCCESS) {
-		helper_log(LOG_NOTICE, "%s pam_start() r %i: %s",
-			__func__, r, pam_strerror(pamh, r));
-		return r;
-	}
+	int r;
 
 	switch (req_type) {
 	case REQ_AUTH:
@@ -192,21 +170,66 @@ static int do_pam(const char *user, enum req_type req_type)
 	case REQ_CHTOK:
 	 	r = do_chtok(pamh, 0);
 		break;
+
+	default:
+		r = PAM_AUTHTOK_ERR;
+		break;
 	}
 
-	pam_end(pamh, r);
+	return r;
+}
+
+static int do_pam(const char *type)
+{
+	struct passwd *pw = getpwuid(getuid());
+	if (!pw) {
+		helper_log(LOG_NOTICE, "Cannot retrieve info for uid %d",
+			getuid());
+		return PAM_AUTHTOK_ERR;
+	}
+
+	helper_log(LOG_NOTICE, "uid %i, euid %i, user '%s'",
+		getuid(), geteuid(), pw->pw_name);
+
+	pam_handle_t *pamh;
+	struct pam_conv pam_conv = { conv_cb, NULL };
+	int r = pam_start("login", pw->pw_name, &pam_conv, &pamh);
+
+	if (r != PAM_SUCCESS) {
+		helper_log(LOG_NOTICE, "%s pam_start() r %i: %s",
+			__func__, r, pam_strerror(pamh, r));
+		return r;
+	}
+
+	if (!strcmp(type, "auth")) {
+		r = do_pam_type(pamh, REQ_AUTH);
+		helper_log(LOG_NOTICE, "%sAuthenticated.",
+			r == PAM_SUCCESS ? "" : "Not ");
+	} else if (!strcmp(type, "chtok")) {
+		r = do_pam_type(pamh, REQ_CHTOK);
+		helper_log(LOG_NOTICE, "%sChanged auth token.",
+			r == PAM_SUCCESS ? "Successfully " : "Not ");
+	} else {
+		r = PAM_AUTH_ERR;
+		helper_log(LOG_NOTICE, "Unknown request: %s", type);
+	}
 
 	/* send a message to parent that conversation is over */
-	int t = 0;
-	write(STDOUT_FILENO, &t, sizeof(t));
+	int cmd = CMD_RET;
+	int val = r;
+	const char *ret_str = pam_strerror(pamh, r);
+	int ret_len = strlen(ret_str);
+	write(STDOUT_FILENO, &cmd, sizeof(cmd));
+	write(STDOUT_FILENO, &val, sizeof(val));
+	write(STDOUT_FILENO, ret_str, ret_len);
+
+	pam_end(pamh, r);
 
 	return r;
 }
 
 int main(int argc, char **argv)
 {
-	int r;
-
 	/*
 	 * we establish that this program is running with non-tty stdin.
 	 * this is to discourage casual use. It does *NOT* prevent an
@@ -228,28 +251,7 @@ int main(int argc, char **argv)
 		return PAM_SYSTEM_ERR;
 	}
 
-	struct passwd *pw = getpwuid(getuid());
-	if (!pw) {
-		helper_log(LOG_NOTICE, "Cannot retrieve info for uid %d",
-			getuid());
-		return PAM_AUTHTOK_ERR;
-	}
-
-	helper_log(LOG_NOTICE, "uid %i, euid %i, user '%s'",
-		getuid(), geteuid(), pw->pw_name);
-
-	if (!strcmp(argv[1], "auth")) {
-		r = do_pam(pw->pw_name, REQ_AUTH);
-		helper_log(LOG_NOTICE, "%sAuthenticated.",
-			r == PAM_SUCCESS ? "" : "Not ");
-	} else if (!strcmp(argv[1], "chtok")) {
-		r = do_pam(pw->pw_name, REQ_CHTOK);
-		helper_log(LOG_NOTICE, "%sChanged auth token.",
-			r == PAM_SUCCESS ? "Successfully " : "Not ");
-	} else {
-		r = PAM_AUTH_ERR;
-		helper_log(LOG_NOTICE, "Unknown request: %s", argv[2]);
-	}
+	int r = do_pam(argv[1]);
 
 	return r == PAM_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
 }
