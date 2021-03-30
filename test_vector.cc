@@ -9,25 +9,28 @@
 #include <iostream>
 #include <algorithm>
 
-int main()
+void test_v1()
 {
 	std::vector<int> v1 = {
 		2, 1, 0, 3, 7,
 	};
 
-	std::vector<int> v2 = {
-		26, 11, 31, 23, 29, 17,
-	};
-
 	printf("sizeof(v1) %zi, v1.capacity %lu\n",
 		sizeof(v1), v1.capacity());
-
-	printf("sizeof(v2) %zi, v2.capacity %lu\n",
-		sizeof(v2), v2.capacity());
 
 	for (auto &v : v1) {
 		std::cout << v << std::endl;
 	}
+}
+
+void test_v2()
+{
+	std::vector<int> v2 = {
+		26, 11, 31, 23, 29, 17,
+	};
+
+	printf("sizeof(v2) %zi, v2.capacity %lu\n",
+		sizeof(v2), v2.capacity());
 
 	printf("--- loop index ---\n");
 	for (unsigned i = 0; i < v2.size(); i++) {
@@ -51,6 +54,23 @@ int main()
 		printf("%p: %i\n", (void *)&(*v), *v);
 		//std::cout << *v << std::endl;
 	}
+}
+
+void test_v3()
+{
+	std::vector<double> v3 = {
+		2.2, 1.1, 0.0, 3.3, 7.7,
+	};
+
+	printf("sizeof(v3) %zi, nr %zi, v3.capacity %lu\n",
+		sizeof(v3), sizeof(v3)/sizeof(double), v3.capacity());
+}
+
+int main()
+{
+	test_v1();
+	test_v2();
+	test_v3();
 
 	return 0;
 }
