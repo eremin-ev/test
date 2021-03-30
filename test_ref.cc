@@ -8,22 +8,25 @@
 #include <stdio.h>
 #include <math.h>
 
-
 int main()
 {
-	int i = 314;
+	int i = 317;
 	int *pi = &i;
 	int &ri = i;
-
 	printf("%i %i %i\n", i, ri, *pi);
-
 	ri = 271;
-
+	printf("%i %i %i\n", i, ri, *pi);
+	*pi = 373;
 	printf("%i %i %i\n", i, ri, *pi);
 
-	*pi = 161;
+	int *pn = new int;
+	printf("pn %p\n", pn);
+	delete pn;
 
-	printf("%i %i %i\n", i, ri, *pi);
+	int &rn = *new int;
+	rn = 173;
+	printf("&rn %p, rn %i\n", &rn, rn);
+	delete &rn;
 
 	return 0;
 }
