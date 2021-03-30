@@ -37,43 +37,48 @@ int read_from_stdin(struct pam_msg_rp *rp)
 	int r;
 	int tok_len = 128;
 	char *tok_str = malloc(tok_len);
-	r = read(STDIN_FILENO, tok_str, tok_len);
+	/* the last character of the tok_str is reserved for '\0' */
+	r = read(STDIN_FILENO, tok_str, tok_len - 1);
 	if (r == -1) {
 		printf("%s: %s\n", __func__, strerror(errno));
 		return 0;
 	}
 	tok_str[r] = '\0';
 
-	rp->rep_len = r;
+	/* take '\0' into account */
+	rp->rep_len = r + 1;
 	rp->rep_str = tok_str;
 
-	printf("%s r %i, authtok '%s'\n", __func__, rp->rep_len, rp->rep_str);
+	printf("%s r %i, authtok '%s:%i'\n", __func__,
+		r, rp->rep_str, rp->rep_len);
 
-	return r;
+	return rp->rep_len;
 }
 
 int rq_handle(struct pam_msg_rq *rq)
 {
 	printf("%s %s '%s:%i'\n", __func__,
 		msg_type_str(rq->msg_style), rq->msg, rq->msg_len);
-	if (rq->msg_style == PAM_PROMPT_ECHO_OFF &&
-			!strcmp(rq->msg, "Password: ")) {
-		rq->rq_flags |= REP_PASSWD;
-	}
 
-	if (rq->msg_style == PAM_PROMPT_ECHO_OFF &&
-			!strcmp(rq->msg, "Current password: ")) {
-		rq->rq_flags |= REP_PASSWD_RETYPE;
-	}
+	if (rq->msg_style == PAM_PROMPT_ECHO_OFF ||
+			rq->msg_style == PAM_PROMPT_ECHO_ON) {
+		if (!strcmp(rq->msg, "Password: ")) {
+			rq->rq_flags |= REP_PASSWD;
+		}
 
-	if (rq->msg_style == PAM_PROMPT_ECHO_OFF &&
-			!strcmp(rq->msg, "New password: ")) {
-		rq->rq_flags |= REP_PASSWD_NEW;
-	}
+		if (!strcmp(rq->msg, "Current password: ")) {
+			rq->rq_flags |= REP_PASSWD_RETYPE;
+		}
 
-	if (rq->msg_style == PAM_PROMPT_ECHO_OFF &&
-			!strcmp(rq->msg, "Retype new password: ")) {
-		rq->rq_flags |= REP_PASSWD_RETYPE;
+		if (!strcmp(rq->msg, "New password: ")) {
+			rq->rq_flags |= REP_PASSWD_NEW;
+		}
+
+		if (!strcmp(rq->msg, "Retype new password: ")) {
+			rq->rq_flags |= REP_PASSWD_RETYPE;
+		}
+	} else if (rq->msg_style == PAM_ERROR_MSG ||
+			rq->msg_style == PAM_TEXT_INFO) {
 	}
 
 	return rq->rq_flags;
@@ -127,7 +132,7 @@ static int handle_conv(int fd_i, int fd_o)
 	struct pam_msg_rp rp;
 	int i, r;
 
-	printf("%s conv... reading num_msg from %d ...\n", __func__, fd_i);
+	printf("%s reading num_msg from %d ...\n", __func__, fd_i);
 	read(fd_i, &num_msg, sizeof(num_msg));
 
 	rq = malloc(num_msg * sizeof(struct pam_msg_rq));
@@ -176,8 +181,8 @@ static int handle_conv(int fd_i, int fd_o)
 
 static int talk_to_helper(int fd_i, int fd_o)
 {
-	int ret;
 	int cmd;
+	int ret = PAM_SUCCESS;
 	int run = 1;
 
 	while (run) {
@@ -234,19 +239,20 @@ int main(int argc, char **argv)
 		NULL
 	};
 	struct sigaction oldsa;
+	int r;
 
 	printf("Parent uid %i, euid %i\n", getuid(), geteuid());
 
 	child = child_spawn(child_path, child_argv, child_envp, fds, &oldsa);
 
-	talk_to_helper(fds[PIPE_READ_FD], fds[PIPE_WRITE_FD]);
+	r = talk_to_helper(fds[PIPE_READ_FD], fds[PIPE_WRITE_FD]);
 
 	child_wait(child, fds);
 
 	/* restore old signal handler */
 	sigaction(SIGCHLD, &oldsa, NULL);
 
-	int r = 0;
+	printf("Helper ret %d\n", r);
 
 	return r == PAM_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
 }
