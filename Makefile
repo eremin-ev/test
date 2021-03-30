@@ -5,7 +5,8 @@ WERROR = -Werror
 #DBG = -O0 -g
 DBG ?= -O2 -g
 CFLAGS = $(WALL) $(WERROR) $(DBG) -I$(src)/lib
-CXXFLAGS = $(WALL) $(DBG)
+# -I$(PWD)
+CXXFLAGS = $(WALL) $(DBG) -std=c++11 -fPIC -I$(src)
 LDLIBS = -lm
 
 bin =	test_division_by_zero \
@@ -27,6 +28,7 @@ bin =	test_division_by_zero \
 	test_ptr_array \
 	test_ref \
 	test_sizeof \
+	test_setter \
 	test_substr_cnt \
 	test_vector \
 	test_read
@@ -46,6 +48,9 @@ test_pam_spawn: spawn-child.o
 
 test_keyval: CFLAGS += -I$(src)/lib
 test_keyval: keyval.o
+
+test_setter: CXXFLAGS += $(shell pkg-config --cflags Qt5Core)
+test_setter: LDLIBS = $(shell pkg-config --libs Qt5Core)
 
 tags:
 	ctags -R .
