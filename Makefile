@@ -14,6 +14,7 @@ bin =	test_division_by_zero \
 	test_inherit \
 	test_inotify \
 	test_keyval \
+	test_lambda \
 	test_line_point \
 	test_list_vs_tree \
 	test_map \
