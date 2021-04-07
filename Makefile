@@ -9,7 +9,8 @@ CFLAGS = $(WALL) $(WERROR) $(DBG) -I$(src)/lib
 CXXFLAGS = $(WALL) $(DBG) -std=c++11 -fPIC -I$(src)
 LDLIBS = -lm
 
-bin =	test_division_by_zero \
+bin =	test_dayofweek \
+	test_division_by_zero \
 	test_fanotify \
 	test_inherit \
 	test_inotify \
@@ -50,8 +51,10 @@ test_pam_spawn: spawn-child.o
 test_keyval: CFLAGS += -I$(src)/lib
 test_keyval: keyval.o
 
-test_setter: CXXFLAGS += $(shell pkg-config --cflags Qt5Core)
-test_setter: LDLIBS = $(shell pkg-config --libs Qt5Core)
+qt := test_dayofweek test_setter
+
+$(qt): CXXFLAGS += $(shell pkg-config --cflags Qt5Core)
+$(qt): LDLIBS = $(shell pkg-config --libs Qt5Core)
 
 tags:
 	ctags -R .
