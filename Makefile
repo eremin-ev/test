@@ -20,6 +20,7 @@ bin =	test_dayofweek \
 	test_list_vs_tree \
 	test_map \
 	test_memmove \
+	test_mmap_chunks \
 	test_op \
 	test_page \
 	test_pam \
@@ -55,6 +56,8 @@ qt := test_dayofweek test_setter
 
 $(qt): CXXFLAGS += $(shell pkg-config --cflags Qt5Core)
 $(qt): LDLIBS = $(shell pkg-config --libs Qt5Core)
+
+test_mmap_chunks: LDLIBS += $(shell pkg-config --libs libcrypto)
 
 tags:
 	ctags -R .
