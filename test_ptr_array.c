@@ -96,7 +96,7 @@ int main(void)
 	struct A *a1 = NULL;
 	struct A *a2[N];
 
-	printf("%s sizeof(struct A) %li\n", __func__, sizeof(struct A));
+	printf("%s sizeof(struct A) %zi\n", __func__, sizeof(struct A));
 
 	do_fill_Solaris(&a1, N);
 	for (i = 0; i < N; ++i) {

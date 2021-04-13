@@ -16,7 +16,7 @@ int main(void)
 	i = (void *)a;
 
 	for (i0 = i; (long unsigned)(i - i0) < PAGE_SIZE/sizeof(unsigned int); ++i) {
-		printf("%lx %lx %08x\n", i - i0, (void *)i - (void *)i0, *i);
+		printf("%zx %zx %08x\n", i - i0, (void *)i - (void *)i0, *i);
 	}
 	printf("\n");
 
