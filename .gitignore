@@ -14,6 +14,7 @@ test_line_point
 test_list_vs_tree
 test_map
 test_memmove
+test_mmap_chunks
 test_op
 test_page
 test_pam
