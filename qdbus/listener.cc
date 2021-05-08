@@ -16,7 +16,7 @@ int main(int ac, char **av)
 
 	QDBusConnection::sessionBus().connect(QString(),
 					      QString(),
-					      "my.test.ICalculator",
+					      "my.test.Calc_Interface",
 					      "newProduct",
 					      "d",
 					      &l,
@@ -24,7 +24,7 @@ int main(int ac, char **av)
 
 	QDBusConnection::sessionBus().connect(QString(),
 					      QString(),
-					      "my.test.ICalculator",
+					      "my.test.Calc_Interface",
 					      "newQuotient",
 					      "d",
 					      &l,

@@ -11,10 +11,10 @@ int main(int ac, char **av)
 		return EXIT_FAILURE;
 	}
 
-	QDBusInterface iface("my.test.SCalculator",
-			     "/my/test/OCalculator",
-			     "my.test.ICalculator",
-			     QDBusConnection::sessionBus());
+    QDBusInterface iface("my.test.Calc_Service",
+                         "/my/test/Calc_Object",
+                         "my.test.Calc_Interface",
+                         QDBusConnection::sessionBus());
 
 	if (iface.isValid()) {
 		QDBusReply<double> reply = iface.call("multiply", 2.0, 3.3);
@@ -25,7 +25,7 @@ int main(int ac, char **av)
 			return EXIT_FAILURE;
 		}
 
-		reply = iface.call("divide", 5.2, 0.0);
+		reply = iface.call("divide", 5.2, 1.3);
 		if (reply.isValid()) {
 			printf("Reply from divide was: %e\n", reply.value());
 			return EXIT_SUCCESS;

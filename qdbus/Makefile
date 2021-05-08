@@ -3,31 +3,24 @@ CXXFLAGS = $(WALL) -O0 -g -std=c++11 -fPIC -I$(src) -I$(PWD)
 CXXFLAGS += $(shell pkg-config --cflags Qt5Core Qt5DBus)
 LDLIBS = $(shell pkg-config --libs Qt5Core Qt5DBus)
 
-all: client server listener
+all: client server listener tags
 
-server: Calc.o moc_Calc.o calculatoradaptor.o
+server: Calc.o moc_Calc.o
 
 listener: Listen.o moc_Listen.o
 
-Calc.o: calculatoradaptor.cpp calculatoradaptor.h
-
+# Note: Calc.xml is not built by default
 Calc.xml: Calc.h
 	qdbuscpp2xml -A $< -o $@
 
-calculatoradaptor.o: calculatoradaptor.moc
-
-calculatoradaptor.moc: calculatoradaptor.h
+moc_Calc.cc: Calc.h
 	moc -o $@ $<
 
-calculatoradaptor.cpp calculatoradaptor.h: Calc.xml
-	qdbusxml2cpp -m -a calculatoradaptor -i Calc.h -l Calc $<
-
-moc_Calc.cpp: Calc.h
+moc_Listen.cc: Listen.h
 	moc -o $@ $<
 
-moc_Listen.cpp: Listen.h
-	moc -o $@ $<
+tags:
+	ctags -R .
 
 clean:
-	rm -vf *.o tags client server Calc.xml *.moc moc_*.cpp
-	rm -vf calculatoradaptor.h calculatoradaptor.cpp
+	rm -vf *.o tags client server listener Calc.xml *.moc moc_*.cpp
