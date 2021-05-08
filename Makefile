@@ -37,6 +37,7 @@ bin =	test_dayofweek \
 	test_read
 
 all: $(bin) tags
+	$(MAKE) -C qdbus
 
 test_list_vs_tree: rbtree.o
 
