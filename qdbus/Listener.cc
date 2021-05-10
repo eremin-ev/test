@@ -1,17 +1,17 @@
-#include "Listen.h"
+#include "Listener.h"
 
-Listen::Listen(QObject *parent)
+Listener::Listener(QObject *parent)
 	: QObject(parent)
 {
 	qDebug() << __PRETTY_FUNCTION__;
 }
 
-void Listen::reportNewProduct(double product)
+void Listener::reportNewProduct(double product)
 {
 	qDebug() << "Received a new product " << product;
 }
 
-void Listen::reportNewQuotient(double quotient)
+void Listener::reportNewQuotient(double quotient)
 {
 	qDebug() << "Received a new quotient " << quotient;
 }

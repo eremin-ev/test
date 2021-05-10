@@ -2,12 +2,13 @@
 #include <QDBusConnection>
 
 #include "Calc.h"
-
+#include "addr.h"
 
 CalcAdaptor::CalcAdaptor(Calc *calc)
     : QDBusAbstractAdaptor(calc)
     , m_calc(calc)
 {
+    qDebug() << __PRETTY_FUNCTION__;
 }
 
 Calc::Calc(QObject *parent)
@@ -16,8 +17,8 @@ Calc::Calc(QObject *parent)
 {
 	qDebug() << __PRETTY_FUNCTION__;
 	QDBusConnection dbus = QDBusConnection::sessionBus();
-	dbus.registerObject("/my/test/Calc_Object", this);
-	dbus.registerService("my.test.Calc_Service");
+	dbus.registerService(QStringLiteral(CALC_DBUS_SERVICE));
+	dbus.registerObject(QStringLiteral(CALC_DBUS_OBJECT_PATH), this);
 }
 
 Calc::~Calc()

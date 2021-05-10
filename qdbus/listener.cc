@@ -1,34 +1,50 @@
 #include <QtCore>
 #include <QtDBus>
 
-#include "Listen.h"
+#include "Listener.h"
+#include "addr.h"
 
 int main(int ac, char **av)
 {
 	QCoreApplication a(ac, av);
 
-	if (!QDBusConnection::sessionBus().isConnected()) {
+    QDBusConnection c = QDBusConnection::sessionBus();
+
+	if (!c.isConnected()) {
 		qCritical() << "Cannot connect to the D-Bus session bus!";
 		return EXIT_FAILURE;
 	}
 
-	Listen l;
+    bool r;
+    Listener l;
+    const char *slotNewProduct = SLOT(reportNewProduct(double));
+    const char *slotNewQuotient = SLOT(reportNewQuotient(double));
 
-	QDBusConnection::sessionBus().connect(QString(),
-					      QString(),
-					      "my.test.Calc_Interface",
-					      "newProduct",
-					      "d",
-					      &l,
-					      SLOT(reportNewProduct(double)));
+    r = c.connect(QStringLiteral(CALC_DBUS_SERVICE),
+                  QStringLiteral(CALC_DBUS_OBJECT_PATH),
+                  QStringLiteral(CALC_DBUS_INTERFACE),
+                  QStringLiteral("newProduct"),
+                  QStringLiteral("d"),
+                  &l, slotNewProduct);
 
-	QDBusConnection::sessionBus().connect(QString(),
-					      QString(),
-					      "my.test.Calc_Interface",
-					      "newQuotient",
-					      "d",
-					      &l,
-					      SLOT(reportNewQuotient(double)));
+    if (r) {
+        qDebug() << "Ok connected" << slotNewProduct;
+    } else {
+        qDebug("Cannot connect reportNewProduct");
+    }
+
+    r = c.connect(QStringLiteral(CALC_DBUS_SERVICE),
+                  QStringLiteral(CALC_DBUS_OBJECT_PATH),
+                  QStringLiteral(CALC_DBUS_INTERFACE),
+                  QStringLiteral("newQuotient"),
+                  QStringLiteral("d"),
+                  &l, slotNewQuotient);
+
+    if (r) {
+        qDebug() << "Ok connected" << slotNewQuotient;
+    } else {
+        qDebug("Cannot connect %s", slotNewQuotient);
+    }
 
 	return a.exec();
 }

@@ -4,10 +4,12 @@
 #include <QObject>
 #include <QDBusAbstractAdaptor>
 
+#include "addr.h"
+
 class Calc;
 class CalcAdaptor : public QDBusAbstractAdaptor {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "my.test.Calc_Interface")
+    Q_CLASSINFO("D-Bus Interface", CALC_DBUS_INTERFACE)
 
 public:
     explicit CalcAdaptor(Calc *calc);
