@@ -7,7 +7,7 @@ all: client server listener tags
 
 server: Calc.o moc_Calc.o
 
-listener: Listen.o moc_Listen.o
+listener: Listener.o moc_Listener.o
 
 # Note: Calc.xml is not built by default
 Calc.xml: Calc.h
@@ -16,7 +16,7 @@ Calc.xml: Calc.h
 moc_Calc.cc: Calc.h
 	moc -o $@ $<
 
-moc_Listen.cc: Listen.h
+moc_Listener.cc: Listener.h
 	moc -o $@ $<
 
 tags:

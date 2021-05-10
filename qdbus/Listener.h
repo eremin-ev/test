@@ -3,12 +3,12 @@
 
 #include <QtCore>
 
-class Listen : public QObject
+class Listener : public QObject
 {
-	Q_OBJECT;
+    Q_OBJECT
 
 public:
-	Listen(QObject *parent=nullptr);
+    Listener(QObject *parent=nullptr);
 
 public slots:
 	void reportNewProduct(double product);
