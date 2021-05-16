@@ -1,12 +1,12 @@
 #include <QCoreApplication>
 
-#include "Calc.h"
+#include "Serv.h"
 
 int main(int ac, char **av)
 {
 	QCoreApplication a(ac, av);
 
-	Calc c(&a);
+	Serv serv(&a);
 
 	return a.exec();
 }

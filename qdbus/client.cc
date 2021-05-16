@@ -13,9 +13,9 @@ int main(int ac, char **av)
 		return EXIT_FAILURE;
 	}
 
-    QDBusInterface iface(QStringLiteral(CALC_DBUS_SERVICE),
-                         QStringLiteral(CALC_DBUS_OBJECT_PATH),
-                         QStringLiteral(CALC_DBUS_INTERFACE),
+    QDBusInterface iface(QStringLiteral(SERV_DBUS_SERVICE),
+                         QStringLiteral(SERV_DBUS_OBJECT_PATH),
+                         QStringLiteral(SERV_DBUS_INTERFACE),
                          QDBusConnection::sessionBus());
 
 	if (iface.isValid()) {
@@ -37,7 +37,7 @@ int main(int ac, char **av)
 		}
 	}
 
-	qCritical("No D-Bus interface %s found!", QStringLiteral(CALC_DBUS_INTERFACE));
+	qCritical("No D-Bus interface %s found!", QStringLiteral(SERV_DBUS_INTERFACE).toUtf8().constData());
 
 	return EXIT_FAILURE;
 }

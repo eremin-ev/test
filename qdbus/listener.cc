@@ -20,9 +20,9 @@ int main(int ac, char **av)
     const char *slotNewProduct = SLOT(reportNewProduct(double));
     const char *slotNewQuotient = SLOT(reportNewQuotient(double));
 
-    r = c.connect(QStringLiteral(CALC_DBUS_SERVICE),
-                  QStringLiteral(CALC_DBUS_OBJECT_PATH),
-                  QStringLiteral(CALC_DBUS_INTERFACE),
+    r = c.connect(QStringLiteral(SERV_DBUS_SERVICE),
+                  QStringLiteral(SERV_DBUS_OBJECT_PATH),
+                  QStringLiteral(SERV_DBUS_INTERFACE),
                   QStringLiteral("newProduct"),
                   QStringLiteral("d"),
                   &l, slotNewProduct);
@@ -33,9 +33,9 @@ int main(int ac, char **av)
         qDebug("Cannot connect reportNewProduct");
     }
 
-    r = c.connect(QStringLiteral(CALC_DBUS_SERVICE),
-                  QStringLiteral(CALC_DBUS_OBJECT_PATH),
-                  QStringLiteral(CALC_DBUS_INTERFACE),
+    r = c.connect(QStringLiteral(SERV_DBUS_SERVICE),
+                  QStringLiteral(SERV_DBUS_OBJECT_PATH),
+                  QStringLiteral(SERV_DBUS_INTERFACE),
                   QStringLiteral("newQuotient"),
                   QStringLiteral("d"),
                   &l, slotNewQuotient);
