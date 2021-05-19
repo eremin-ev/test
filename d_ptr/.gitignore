@@ -1,0 +1,3 @@
+*.o
+libsui.so
+test_app
