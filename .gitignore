@@ -2,6 +2,7 @@
 *.o
 *.i
 *.s
+moc_*.cc
 tags
 test_dayofweek
 test_division_by_zero

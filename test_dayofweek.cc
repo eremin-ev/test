@@ -9,6 +9,8 @@
 #include <QString>
 #include <QTime>
 
+#include "test_dayofweek.h"
+
 static QList<Qt::DayOfWeek> parseDays(const QString &dayStr)
 {
 	const QMap<QString, Qt::DayOfWeek> strToDayOfWeek = {
@@ -79,6 +81,21 @@ void test_1(const QString &s_good)
     qDebug() << p_good << l_good << t.from << t.to;;
 }
 
+void test_2()
+{
+    QDate date = QDate::currentDate();
+
+    enum WeekDaySettings::DayOfWeek day1 = (enum WeekDaySettings::DayOfWeek)date.dayOfWeek();
+    QVariant vDay1 = QVariant::fromValue(day1);
+    QString sDay1 = vDay1.toString();
+    qDebug() << date << day1 << vDay1 << sDay1;
+
+    enum Qt::DayOfWeek day2 = (enum Qt::DayOfWeek)date.dayOfWeek();
+    QVariant vDay2 = QVariant::fromValue(day2);
+    QString sDay2 = vDay2.toString();
+    qDebug() << date << day2 << vDay2 << sDay2;
+}
+
 int main()
 {
     test_1(QStringLiteral(""));
@@ -87,6 +104,7 @@ int main()
     test_1(QStringLiteral("Mo,Th,Su:14.00-"));
     test_1(QStringLiteral("Wa,Th,Qe,Error,Su,Mo"));
 
+    test_2();
 #if 0
     QStringList p_bad = s_bad.split(':');
     if (p_bad.size() < 1) {
