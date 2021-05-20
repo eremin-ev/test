@@ -58,6 +58,11 @@ $(qt): LDLIBS = $(shell pkg-config --libs Qt5Core)
 
 test_mmap_chunks: LDLIBS += $(shell pkg-config --libs libcrypto)
 
+test_dayofweek: moc_dayofweek.o
+
+moc_dayofweek.cc: test_dayofweek.h
+	moc -o $@ $<
+
 tags:
 	ctags -R .
 
