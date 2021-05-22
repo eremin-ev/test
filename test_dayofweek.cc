@@ -96,6 +96,30 @@ void test_2()
     qDebug() << date << day2 << vDay2 << sDay2;
 }
 
+bool test_3()
+{
+    const QMap<Qt::DayOfWeek, QString> d2s = {
+        { Qt::Monday,    "Mo" },
+        { Qt::Tuesday,   "Tu" },
+        { Qt::Wednesday, "We" },
+        { Qt::Thursday,  "Th" },
+        { Qt::Friday,    "Fr" },
+        { Qt::Saturday,  "Sa" },
+        { Qt::Sunday,    "Su" },
+    };
+
+    QString day = d2s.value((Qt::DayOfWeek)QDate::currentDate().dayOfWeek());
+
+    if (day.isNull()) {
+        qDebug("%s: bad day of week", __PRETTY_FUNCTION__);
+        return false;
+    }
+
+    qDebug("%s: %s", __PRETTY_FUNCTION__, day.toUtf8().constData());
+
+    return true;
+}
+
 int main()
 {
     test_1(QStringLiteral(""));
@@ -105,6 +129,7 @@ int main()
     test_1(QStringLiteral("Wa,Th,Qe,Error,Su,Mo"));
 
     test_2();
+    test_3();
 #if 0
     QStringList p_bad = s_bad.split(':');
     if (p_bad.size() < 1) {
