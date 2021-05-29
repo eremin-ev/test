@@ -120,6 +120,72 @@ bool test_3()
     return true;
 }
 
+bool test_4()
+{
+    const QString d2s[] = {
+        QStringLiteral(""),
+        QStringLiteral("Mo"),
+        QStringLiteral("Tu"),
+        QStringLiteral("We"),
+        QStringLiteral("Th"),
+        QStringLiteral("Fr"),
+        QStringLiteral("Sa"),
+        QStringLiteral("Su"),
+    };
+
+    const QString &day = d2s[QDate::currentDate().dayOfWeek()];
+
+    if (day.isNull()) {
+        qDebug("%s: bad day of week", __PRETTY_FUNCTION__);
+        return false;
+    }
+
+    qDebug("%s: %s", __PRETTY_FUNCTION__, day.toUtf8().constData());
+
+    return true;
+}
+
+typedef QMap<QString, bool> MapData;
+
+void test_5()
+{
+    QVector<QPair<QString, MapData>> mapData = {
+        {
+            QStringLiteral("first.conf"), {
+                { QStringLiteral("AddApples"), true },
+                { QStringLiteral("AddStawberry"), false },
+                { QStringLiteral("AddGrape"), true },
+            }
+        }
+    };
+
+    for (const auto &d : mapData) {
+        qDebug() << d;
+    }
+}
+
+void test_6()
+{
+    struct MapData {
+        QString filename;
+        QMap<QString, bool> mapData;
+    };
+
+    QVector<MapData> mapData = {
+        {
+            QStringLiteral("first.conf"), {
+                { QStringLiteral("AddApples"), true },
+                { QStringLiteral("AddStawberry"), false },
+                { QStringLiteral("AddGrape"), true },
+            }
+        }
+    };
+
+    for (const auto &d : mapData) {
+        qDebug() << d.filename << d.mapData;
+    }
+}
+
 int main()
 {
     test_1(QStringLiteral(""));
@@ -130,6 +196,10 @@ int main()
 
     test_2();
     test_3();
+    test_4();
+    test_5();
+    test_6();
+
 #if 0
     QStringList p_bad = s_bad.split(':');
     if (p_bad.size() < 1) {
