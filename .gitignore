@@ -5,6 +5,7 @@
 moc_*.cc
 tags
 test_dayofweek
+test_destr
 test_division_by_zero
 test_fanotify
 test_inherit
