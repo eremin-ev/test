@@ -1,9 +1,9 @@
 src ?= .
-CXXFLAGS = $(WALL) -O0 -g -std=c++11 -fPIC -I$(src) -I$(PWD)
+CXXFLAGS = -Wall -Wextra -Werror -O0 -g -std=c++11 -fPIC -I$(src) -I$(PWD)
 CXXFLAGS += $(shell pkg-config --cflags Qt5Core Qt5DBus)
 LDLIBS = $(shell pkg-config --libs Qt5Core Qt5DBus)
 
-all: client client-p2p server listener tags
+all: client server listener tags
 
 server: Serv.o moc_Serv.o
 

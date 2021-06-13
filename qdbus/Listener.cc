@@ -15,3 +15,8 @@ void Listener::reportNewQuotient(double quotient)
 {
 	qDebug() << "Received a new quotient " << quotient;
 }
+
+void Listener::reportServQuit()
+{
+	qDebug() << "Received a servQuit";
+}
