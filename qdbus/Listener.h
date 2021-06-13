@@ -13,6 +13,7 @@ public:
 public slots:
 	void reportNewProduct(double product);
 	void reportNewQuotient(double quotient);
+	void reportServQuit();
 };
 
 #endif
