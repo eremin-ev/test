@@ -1,4 +1,12 @@
-See
+# Installation
+
+A dbus-1 configuration file must be installed to
+```
+/etc/dbus-1/system.d/test.conf
+```
+in order to be able to register `"my.test.Serv_Service"` service on the system bus.
+
+# References
 
 [1] D-Bus Specification  
 <https://dbus.freedesktop.org/doc/dbus-specification.html>
