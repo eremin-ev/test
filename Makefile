@@ -13,6 +13,7 @@ bin =	test_dayofweek \
 	test_destr \
 	test_division_by_zero \
 	test_fanotify \
+	test_get_seats \
 	test_inherit \
 	test_inotify \
 	test_keyval \
@@ -40,19 +41,25 @@ bin =	test_dayofweek \
 all: $(bin) tags
 	$(MAKE) -C qdbus
 
-test_op: LDLIBS += -lfmt
+test_dayofweek: moc_dayofweek.o
+
+test_get_seats: LDLIBS += -lsystemd
+
+test_keyval: CFLAGS += -I$(src)/lib
+test_keyval: keyval.o
 
 test_list_vs_tree: rbtree.o
+
+test_op: LDLIBS += -lfmt
+
+test_pam_spawn: spawn-child.o
 
 test_pam: LDLIBS += -lpam
 test_pam_helper: LDLIBS += -lpam
 
 test_pipe: spawn-child.o
 
-test_pam_spawn: spawn-child.o
-
-test_keyval: CFLAGS += -I$(src)/lib
-test_keyval: keyval.o
+test_mmap_chunks: LDLIBS += $(shell pkg-config --libs libcrypto)
 
 qt :=	test_dayofweek \
 	test_destr \
@@ -60,10 +67,6 @@ qt :=	test_dayofweek \
 
 $(qt): CXXFLAGS += $(shell pkg-config --cflags Qt5Core)
 $(qt): LDLIBS = $(shell pkg-config --libs Qt5Core)
-
-test_mmap_chunks: LDLIBS += $(shell pkg-config --libs libcrypto)
-
-test_dayofweek: moc_dayofweek.o
 
 moc_dayofweek.cc: test_dayofweek.h
 	moc -o $@ $<
