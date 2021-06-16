@@ -41,6 +41,10 @@ public:
 #endif
 
 private:
+    void connWait(const QDBusConnection &c);
+    unsigned long connPid(const QDBusConnection &connection);
+    unsigned long connUid(const QDBusConnection &connection);
+
 #if (SERV_DBUS_TYPE == SERV_DBUS_TYPE_P2P)
     QDBusServer m_qdbusServer;
     QDBusConnection *m_p2pConn;

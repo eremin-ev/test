@@ -1,9 +1,16 @@
+#include <dbus/dbus.h>
+
 #include <QDebug>
+#include <QThread>
 #include <QDBusConnection>
 #include <QCoreApplication>
 
 #include "Serv.h"
 #include "addr.h"
+
+#if (SERV_DBUS_TYPE == SERV_DBUS_TYPE_P2P)
+#include "PeerWatcher.h"
+#endif  /* SERV_DBUS_TYPE == SERV_DBUS_TYPE_P2P */
 
 ServAdaptor::ServAdaptor(Serv *serv)
     : QDBusAbstractAdaptor(serv)
@@ -85,20 +92,67 @@ Serv::~Serv()
 #endif
 }
 
+// Wait until connection is authenticated: it is done concurrently to the
+// emitting of the newConnection signal
+void Serv::connWait(const QDBusConnection &c)
+{
+    auto i = static_cast<DBusConnection *>(c.internalPointer());
+    while (dbus_connection_get_is_connected(i) &&
+           !dbus_connection_get_is_authenticated(i)) {
+        qDebug() << __PRETTY_FUNCTION__;
+        QThread::usleep(100);
+    }
+}
+
+unsigned long Serv::connPid(const QDBusConnection &c)
+{
+    auto i = static_cast<DBusConnection *>(c.internalPointer());
+    unsigned long pid = 0;
+    if (dbus_connection_get_unix_process_id(i, &pid)) {
+        return pid;
+    }
+
+    return 0;
+}
+
+unsigned long Serv::connUid(const QDBusConnection &c)
+{
+    auto i = static_cast<DBusConnection *>(c.internalPointer());
+    unsigned long uid = -1;
+    if (dbus_connection_get_unix_user(i, &uid)) {
+        return uid;
+    }
+
+    return -1;
+}
+
 #if (SERV_DBUS_TYPE == SERV_DBUS_TYPE_P2P)
 void Serv::handleNewConnection(const QDBusConnection &connection)
 {
-    // A single peer to peer connection is possible at a given time moment
-    delete m_p2pConn;
-    m_p2pConn = nullptr;
+    QDBusConnection c(connection);
 
-    m_p2pConn = new QDBusConnection(connection);
+    connWait(c);
 
-    qDebug() << __PRETTY_FUNCTION__ << connection.name() << m_p2pConn;
+    PeerWatcher *w = new PeerWatcher(this);
+    qDebug() << __PRETTY_FUNCTION__
+             << c.name()
+             << &c
+             << w
+             << "pid" << connPid(c)
+             << "uid" << connUid(c);
 
-    bool r = m_p2pConn->registerObject(QStringLiteral(SERV_DBUS_OBJECT_PATH), this);
+    bool r = c.registerObject(QStringLiteral(SERV_DBUS_OBJECT_PATH), this);
     if (!r) {
         qDebug() << __PRETTY_FUNCTION__ << "Cannot registerObject";
+    }
+
+    if (!c.connect(QString(),
+                   QStringLiteral("/org/freedesktop/DBus/Local"),
+                   QStringLiteral("org.freedesktop.DBus.Local"),
+                   QStringLiteral("Disconnected"),
+                   w,
+                   SLOT(handleDisconnected()))) {
+        qDebug("Failed to connect to disconnect signal");
     }
 }
 #endif  /* SERV_DBUS_TYPE == SERV_DBUS_TYPE_P2P */

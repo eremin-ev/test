@@ -11,7 +11,6 @@
 #define SERV_DBUS_TYPE_P2P      2
 
 // 0: system, 1: session, 2: peer-to-peer
-#define SERV_DBUS_TYPE          SERV_DBUS_TYPE_SYSTEM
-
+#define SERV_DBUS_TYPE          SERV_DBUS_TYPE_P2P
 
 #endif  /* ADDR_H */
