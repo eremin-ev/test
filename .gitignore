@@ -26,9 +26,11 @@ moc_*.cc
 /test_pipe
 /test_pipe_child
 /test_ptr_array
+/test_qvariant
 /test_read
 /test_ref
 /test_setter
 /test_sizeof
 /test_substr_cnt
 /test_vector
+/test_udisks2
