@@ -1,3 +1,2 @@
-*.o
-libsui.so
-test_app
+/tags
+/test_app
