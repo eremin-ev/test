@@ -37,8 +37,7 @@ bin =	test_dayofweek \
 	test_setter \
 	test_substr_cnt \
 	test_vector \
-	test_read \
-	test_udisks2
+	test_read
 
 all: $(bin) tags
 	$(MAKE) -C qdbus
@@ -66,11 +65,7 @@ test_mmap_chunks: LDLIBS += $(shell pkg-config --libs libcrypto)
 qt :=	test_dayofweek \
 	test_destr \
 	test_qvariant \
-	test_setter \
-	test_udisks2
-
-test_udisks2: CXXFLAGS += $(shell pkg-config --cflags Qt5DBus)
-test_udisks2: LDLIBS += $(shell pkg-config --libs Qt5DBus)
+	test_setter
 
 $(qt): CXXFLAGS += $(shell pkg-config --cflags Qt5Core)
 $(qt): LDLIBS += $(shell pkg-config --libs Qt5Core)

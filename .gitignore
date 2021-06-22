@@ -33,4 +33,3 @@ moc_*.cc
 /test_sizeof
 /test_substr_cnt
 /test_vector
-/test_udisks2
