@@ -40,7 +40,12 @@ bin =	test_dayofweek \
 	test_read
 
 all: $(bin) tags
+	$(MAKE) -C d_ptr
+	$(MAKE) -C modelview
+	$(MAKE) -C pam
 	$(MAKE) -C qdbus
+	$(MAKE) -C udisks2
+	$(MAKE) -C ulock
 
 test_dayofweek: moc_dayofweek.o
 
@@ -83,4 +88,9 @@ tags:
 .PHONY: clean
 clean:
 	rm -vf $(bin) *.i *.o *.s
-	make -C qdbus clean
+	$(MAKE) -C d_ptr clean
+	$(MAKE) -C modelview clean
+	$(MAKE) -C pam clean
+	$(MAKE) -C qdbus clean
+	$(MAKE) -C udisks2 clean
+	$(MAKE) -C ulock clean
