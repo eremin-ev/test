@@ -6,13 +6,14 @@ WERROR = -Werror
 DBG ?= -O2 -g
 CFLAGS = $(WALL) $(WERROR) $(DBG) -I$(src)/lib
 # -I$(PWD)
-CXXFLAGS = $(WALL) $(DBG) -std=c++11 -fPIC -I$(src)
+CXXFLAGS = $(WALL) $(DBG) -std=c++17 -fPIC -I$(src)
 LDLIBS = -lm
 
 bin =	test_dayofweek \
 	test_destr \
 	test_division_by_zero \
 	test_fanotify \
+	test_func \
 	test_get_seats \
 	test_inherit \
 	test_inotify \
