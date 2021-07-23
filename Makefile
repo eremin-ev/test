@@ -37,6 +37,7 @@ bin =	test_dayofweek \
 	test_sizeof \
 	test_setter \
 	test_substr_cnt \
+	test_suid \
 	test_vector \
 	test_read
 

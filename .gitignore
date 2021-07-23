@@ -33,4 +33,5 @@ moc_*.cc
 /test_setter
 /test_sizeof
 /test_substr_cnt
+/test_suid
 /test_vector
