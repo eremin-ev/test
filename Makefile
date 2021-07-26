@@ -15,6 +15,7 @@ bin =	test_dayofweek \
 	test_fanotify \
 	test_func \
 	test_get_seats \
+	test_idxupd \
 	test_inherit \
 	test_inotify \
 	test_keyval \
