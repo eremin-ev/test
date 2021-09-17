@@ -13,6 +13,7 @@ bin =	test_dayofweek \
 	test_destr \
 	test_division_by_zero \
 	test_fanotify \
+	test_fizzbuzz \
 	test_func \
 	test_get_seats \
 	test_idxupd \
