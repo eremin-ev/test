@@ -12,7 +12,8 @@ test_ulock: auth-type.o \
 	    ulock.o \
 	    moc_auth-type.o \
 	    moc_sighandler.o \
-	    moc_ulock.o
+	    moc_ulock.o \
+	    qrc_resources.o
 
 moc_auth-type.cc: auth-type.h
 	moc $< -o $@
@@ -23,5 +24,11 @@ moc_sighandler.cc: sighandler.h
 moc_ulock.cc: ulock.h
 	moc $< -o $@
 
+qrc_resources.cc: resources.qrc \
+		  qml/ulock.qml \
+		  qml/ULockMain.qml \
+		  qml/ULockPassword.qml
+	rcc -name resources $< -o $@
+
 clean:
-	rm -vf test_ulock moc_*.cc *.o
+	rm -vf test_ulock moc_*.cc *.o qrc_resources.cc

@@ -31,7 +31,7 @@ public:
     };
     Q_ENUM(ReqType)
 
-	explicit ULock(QObject *parent = 0);
+	explicit ULock(QObject *parent = nullptr);
 
 	const QString login();
 	const QString passwd();

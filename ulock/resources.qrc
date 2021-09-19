@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/ulock.qml</file>
+        <file>qml/ULockMain.qml</file>
+        <file>qml/ULockPassword.qml</file>
+    </qresource>
+</RCC>

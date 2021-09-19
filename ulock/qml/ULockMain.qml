@@ -25,7 +25,7 @@ Page {
             height: contentHeight
             spacing: 10
 
-            model: authType
+            model: authTypeModel
 
             delegate: BackgroundItem {
                 width: parent.width
@@ -45,7 +45,7 @@ Page {
         }
     }
 
-    AuthType {
-        id: authType
+    AuthTypeModel {
+        id: authTypeModel
     }
 }

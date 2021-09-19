@@ -10,14 +10,14 @@ import org.test.ulock 1.0
 ApplicationWindow {
     id: page
 
-    initialPage: Qt.resolvedUrl("ULockMain.qml")
+    initialPage: Qt.resolvedUrl("qrc:///qml/ULockMain.qml")
 
     Connections {
         target: ulockId
 
         onInputRequested: {
             console.log('onInputRequested: msg', msg, 'type', type)
-            pageStack.push(Qt.resolvedUrl("ULockPassword.qml"))
+            pageStack.push(Qt.resolvedUrl("qrc:///qml/ULockPassword.qml"))
         }
     }
 
