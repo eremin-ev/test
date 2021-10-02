@@ -2,6 +2,7 @@
 *.o
 *.i
 *.s
+*.log
 moc_*.cc
 /tags
 /test_dayofweek
