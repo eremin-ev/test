@@ -41,6 +41,7 @@ bin =	test_dayofweek \
 	test_substr_cnt \
 	test_suid \
 	test_vector \
+	test_virtual \
 	test_read
 
 all: $(bin) tags
@@ -49,7 +50,7 @@ all: $(bin) tags
 	$(MAKE) -C pam
 	$(MAKE) -C qdbus
 	$(MAKE) -C udisks2
-	$(MAKE) -C ulock
+	#$(MAKE) -C ulock
 
 test_dayofweek: moc_dayofweek.o
 
