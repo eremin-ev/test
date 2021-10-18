@@ -9,12 +9,15 @@
 
 int main()
 {
-    Label *label = new Label("widget-geometry", "label-text");
+    Label *label = new Label("widget-geometry", "Label-text");
 
     printf("%s label %p\n", __PRETTY_FUNCTION__, label);
 
     std::cout << label->geometry() << std::endl;
     //std::cout << label->stylesheet() << std::endl;
+    std::cout << label->text() << std::endl;
+
+    label->setText("A-new-label-text");
     std::cout << label->text() << std::endl;
 
     delete label;

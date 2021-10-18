@@ -52,9 +52,18 @@ Label::~Label()
     //delete d_ptr;
 }
 
+void Label::setText(const std::string &text)
+{
+    T_D(Label);
+    printf("%s d_ptr %p\n", __PRETTY_FUNCTION__, d);
+    if (d->m_text != text) {
+        d->m_text = text;
+    }
+}
+
 std::string Label::text() const
 {
-    LabelPrivate *d = static_cast<LabelPrivate *>(d_ptr);
+    T_D(const Label);
     printf("%s d_ptr %p\n", __PRETTY_FUNCTION__, d);
     return d->m_text;
 }

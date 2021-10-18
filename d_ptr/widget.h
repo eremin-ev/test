@@ -15,7 +15,7 @@ public:
     ~Widget();
 
     std::string geometry() const;
-    //std::string stylesheet() const;
+    std::string stylesheet() const;
 
 protected:
     Widget(WidgetPrivate &d);

@@ -14,8 +14,9 @@ struct WidgetPrivate {
 
     Widget *q_ptr;
 
+//? private:
     std::string m_geometry;
-    //std::string m_stylesheet;
+    std::string m_stylesheet;
 };
 
 #endif  /* WIDGET_P_H */
