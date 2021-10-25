@@ -10,15 +10,15 @@
 
 class AuthType {
 public:
-    QString name;
-    ULock::ULockType type;
+    QString authName;
+    QString authType;
 };
 
 AuthTypeModel::AuthTypeModel(QObject *parent)
     : QAbstractListModel(parent)
     , m_types({
-        { QStringLiteral("Login"), ULock::ULockLogin },
-        { QStringLiteral("ULockAuthenticate"), ULock::ULockAuthenticate }
+        { QStringLiteral("Login"), QStringLiteral("Login") },
+        { QStringLiteral("Authenticate"), QStringLiteral("Authenticate") }
       })
 {
     qDebug() << __PRETTY_FUNCTION__;
@@ -48,9 +48,9 @@ QVariant AuthTypeModel::data(const QModelIndex &index, int role) const
 
     switch (role) {
     case NameRole:
-        return item.name;
+        return item.authName;
     case TypeRole:
-        return item.type;
+        return item.authType;
     }
 
     return {};

@@ -1,11 +1,21 @@
 CFLAGS = -Wall -Werror -O0 -g
 CXXFLAGS = $(CFLAGS) -fPIC
-QT = Qt5Core Qt5Gui Qt5Quick Qt5Qml
 
-all: test_ulock
+GCC_VER_MAJOR := $(shell gcc -dumpversion | cut -f1 -d'.')
 
-test_ulock: CXXFLAGS += $(shell pkg-config --cflags $(QT))
-test_ulock: LDLIBS += $(shell pkg-config --libs $(QT))
+ifeq ($(shell expr $(GCC_VER_MAJOR) '>=' 10), 1)
+  CXXFLAGS +=  -Wno-error=mismatched-new-delete
+endif
+
+all: test_authd test_ulock
+
+test_ulock: CXXFLAGS += $(shell pkg-config --cflags Qt5Core Qt5Gui Qt5Quick Qt5Qml Qt5DBus)
+test_ulock: LDLIBS += $(shell pkg-config --libs Qt5Core Qt5Gui Qt5Quick Qt5Qml Qt5DBus)
+
+test_authd: CXXFLAGS += $(shell pkg-config --cflags Qt5Core Qt5DBus)
+test_authd: LDLIBS += $(shell pkg-config --libs Qt5Core Qt5DBus dbus-1)
+
+authd.o: CXXFLAGS += $(shell pkg-config --cflags Qt5Core Qt5DBus dbus-1)
 
 test_ulock: auth-type.o \
 	    sighandler.o \
@@ -15,13 +25,12 @@ test_ulock: auth-type.o \
 	    moc_ulock.o \
 	    qrc_resources.o
 
-moc_auth-type.cc: auth-type.h
-	moc $< -o $@
+test_authd: LDLIBS += -lstdc++
 
-moc_sighandler.cc: sighandler.h
-	moc $< -o $@
+test_authd: authd.o \
+	    moc_authd.o
 
-moc_ulock.cc: ulock.h
+moc_%.cc: %.h
 	moc $< -o $@
 
 qrc_resources.cc: resources.qrc \
@@ -31,4 +40,4 @@ qrc_resources.cc: resources.qrc \
 	rcc -name resources $< -o $@
 
 clean:
-	rm -vf test_ulock moc_*.cc *.o qrc_resources.cc
+	rm -vf test_authd test_ulock moc_*.cc *.o qrc_resources.cc

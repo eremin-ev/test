@@ -7,6 +7,7 @@
 #define ULOCK_H
 
 #include <QObject>
+#include <QDBusInterface>
 
 class ULock : public QObject {
 	Q_OBJECT
@@ -20,7 +21,7 @@ class ULock : public QObject {
 	};
 
 public:
-    enum ULockType {
+    /*enum ULockType {
         ULockLogin = 0,
         ULockAuthenticate,
     };
@@ -29,9 +30,12 @@ public:
     enum ReqType {
         Password = 0,
     };
-    Q_ENUM(ReqType)
+    Q_ENUM(ReqType)*/
 
 	explicit ULock(QObject *parent = nullptr);
+    ~ULock();
+
+    Q_INVOKABLE void authenticate(const QString &authType);
 
 	const QString login();
 	const QString passwd();
@@ -39,15 +43,14 @@ public:
 	void setPasswd(const QString &passwd);
 
 signals:
-    void inputRequested(const QString &msg, ReqType type = ReqType::Password);
+    void inputRequested(const QString &msg, const QString reqType);
 	void loginChanged();
 	void passwdChanged();
 
-public slots:
-    void authenticate(ULockType ulockType);
-
 private:
     bool doAuth(const QString &login, const QString &password);
+
+    QDBusInterface &m_iface;
 	QString m_login;
 	QString m_passwd;
 	int m_state;
