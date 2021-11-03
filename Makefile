@@ -16,6 +16,7 @@ bin =	test_dayofweek \
 	test_fizzbuzz \
 	test_func \
 	test_get_seats \
+	test_getpwnam \
 	test_idxupd \
 	test_inherit \
 	test_inotify \
@@ -74,6 +75,7 @@ test_mmap_chunks: LDLIBS += $(shell pkg-config --libs libcrypto)
 
 qt :=	test_dayofweek \
 	test_destr \
+	test_getpwnam \
 	test_qvariant \
 	test_setter
 

@@ -12,6 +12,7 @@ moc_*.cc
 /test_fizzbuzz
 /test_func
 /test_get_seats
+/test_getpwnam
 /test_idxupd
 /test_inherit
 /test_inotify
