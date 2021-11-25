@@ -17,6 +17,7 @@ bin =	test_dayofweek \
 	test_func \
 	test_get_seats \
 	test_getpwnam \
+	test_hex2str \
 	test_idxupd \
 	test_inherit \
 	test_inotify \
