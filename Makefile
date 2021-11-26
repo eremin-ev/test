@@ -9,7 +9,13 @@ CFLAGS = $(WALL) $(WERROR) $(DBG) -I$(src)/lib
 CXXFLAGS = $(WALL) $(DBG) -std=c++17 -fPIC -I$(src)
 LDLIBS = -lm
 
-bin =	test_dayofweek \
+bin =	test_align \
+	test_array \
+	test_cast \
+	test_comm \
+	test_constr \
+	test_crypto_sock \
+	test_dayofweek \
 	test_destr \
 	test_division_by_zero \
 	test_fanotify \
@@ -55,6 +61,10 @@ all: $(bin) tags
 	$(MAKE) -C udisks2
 	$(MAKE) -C ulock
 
+test_comm: LDLIBS += -lpthread
+
+test_constr test_op: LDLIBS += -lfmt
+
 test_dayofweek: moc_dayofweek.o
 
 test_get_seats: LDLIBS += -lsystemd
@@ -63,8 +73,6 @@ test_keyval: CFLAGS += -I$(src)/lib
 test_keyval: keyval.o
 
 test_list_vs_tree: rbtree.o
-
-test_op: LDLIBS += -lfmt
 
 test_pam_spawn: spawn-child.o
 

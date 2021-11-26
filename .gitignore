@@ -5,6 +5,12 @@
 *.log
 moc_*.cc
 /tags
+/test_align
+/test_array
+/test_cast
+/test_comm
+/test_constr
+/test_crypto_sock
 /test_dayofweek
 /test_destr
 /test_division_by_zero
