@@ -21,6 +21,7 @@ bin =	test_dayofweek \
 	test_idxupd \
 	test_inherit \
 	test_inotify \
+	test_is_constexpr \
 	test_keyval \
 	test_lambda \
 	test_line_point \
