@@ -18,6 +18,11 @@ function mk_gnuplot()
 	printf "plot '/tmp/1.txt' u 6 t 'tree seach', '' u 7 t 'list search'\n"
 }
 
+if [[ ! -x 'test_list_vs_tree' ]]; then
+	echo "Cannot find 'test_list_vs_tree'"
+	exit
+fi
+
 #
 # Warm up to make CPUs scale frequency to max performance
 #
