@@ -4,10 +4,19 @@
 
 #include "addr.h"
 
-#if (SERV_DBUS_TYPE == SERV_DBUS_TYPE_SYSTEM) || \
-    (SERV_DBUS_TYPE == SERV_DBUS_TYPE_SESSION)
-static QDBusInterface &connectToBus(const QDBusConnection &c)
+static QDBusInterface &getIface()
 {
+#if (SERV_DBUS_TYPE == SERV_DBUS_TYPE_SYSTEM)
+    const QDBusConnection c = QDBusConnection::systemBus();
+#elif  (SERV_DBUS_TYPE == SERV_DBUS_TYPE_SESSION)
+    const QDBusConnection c = QDBusConnection::sessionBus();
+#elif (SERV_DBUS_TYPE == SERV_DBUS_TYPE_P2P)
+    const QDBusConnection c = QDBusConnection::connectToPeer(QStringLiteral(SERV_DBUS_P2P_ADDRESS),
+                                                             QStringLiteral("serv_p2p_name"));
+#else
+    #error "Wrong SERV_DBUS_TYPE: " #SERV_DBUS_TYPE
+#endif
+
     if (!c.isConnected()) {
         qCritical() << "Cannot connect to the D-Bus";
         exit(EXIT_FAILURE);
@@ -21,42 +30,12 @@ static QDBusInterface &connectToBus(const QDBusConnection &c)
 
     return iface;
 }
-#elif (SERV_DBUS_TYPE == SERV_DBUS_TYPE_P2P)
-static QDBusInterface &connectToPeer()
-{
-    QDBusConnection c = QDBusConnection::connectToPeer(QStringLiteral(SERV_DBUS_P2P_ADDRESS),
-                                                       QStringLiteral("serv_p2p_name"));
-
-    if (!c.isConnected()) {
-        qCritical() << "Cannot connect to the D-Bus p2p bus.\n";
-        exit(EXIT_FAILURE);
-    }
-
-    static
-    QDBusInterface iface(QString(),
-                         QStringLiteral(SERV_DBUS_OBJECT_PATH),
-                         QStringLiteral(SERV_DBUS_INTERFACE),
-                         c);
-
-    return iface;
-}
-#else
-    #error "Wrong SERV_DBUS_TYPE: " #SERV_DBUS_TYPE
-#endif
 
 int main(int argc, char **argv)
 {
     QCoreApplication a(argc, argv);
 
-#if (SERV_DBUS_TYPE == SERV_DBUS_TYPE_SYSTEM)
-    QDBusInterface &iface = connectToBus(QDBusConnection::systemBus());
-#elif  (SERV_DBUS_TYPE == SERV_DBUS_TYPE_SESSION)
-    QDBusInterface &iface = connectToBus(QDBusConnection::sessionBus());
-#elif (SERV_DBUS_TYPE == SERV_DBUS_TYPE_P2P)
-    QDBusInterface &iface = connectToPeer();
-#else
-    #error "Wrong SERV_DBUS_TYPE: " #SERV_DBUS_TYPE
-#endif
+    QDBusInterface &iface = getIface();
 
 	if (!iface.isValid()) {
         qCritical("No D-Bus interface %s found!", QStringLiteral(SERV_DBUS_INTERFACE).toUtf8().constData());
