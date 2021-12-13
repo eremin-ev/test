@@ -44,6 +44,7 @@ moc_*.cc
 /test_ref
 /test_setter
 /test_sizeof
+/test_str_diff
 /test_substr_cnt
 /test_suid
 /test_vector
