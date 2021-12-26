@@ -40,6 +40,7 @@ moc_*.cc
 /test_pipe
 /test_pipe_child
 /test_ptr_array
+/test_qfile
 /test_qvariant
 /test_read
 /test_ref

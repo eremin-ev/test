@@ -44,6 +44,7 @@ bin =	test_align \
 	test_pipe \
 	test_pipe_child \
 	test_ptr_array \
+	test_qfile \
 	test_qvariant \
 	test_ref \
 	test_sizeof \
@@ -88,6 +89,7 @@ test_mmap_chunks: LDLIBS += $(shell pkg-config --libs libcrypto)
 qt :=	test_dayofweek \
 	test_destr \
 	test_getpwnam \
+	test_qfile \
 	test_qvariant \
 	test_setter
 
