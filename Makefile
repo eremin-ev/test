@@ -45,6 +45,7 @@ bin =	test_align \
 	test_pipe_child \
 	test_ptr_array \
 	test_qfile \
+	test_qsettings \
 	test_qvariant \
 	test_ref \
 	test_sizeof \
@@ -90,6 +91,7 @@ qt :=	test_dayofweek \
 	test_destr \
 	test_getpwnam \
 	test_qfile \
+	test_qsettings \
 	test_qvariant \
 	test_setter
 
