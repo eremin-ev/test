@@ -24,6 +24,7 @@ bin =	test_align \
 	test_func \
 	test_get_seats \
 	test_getpwnam \
+	test_good_taste \
 	test_hex2str \
 	test_idxupd \
 	test_inherit \
