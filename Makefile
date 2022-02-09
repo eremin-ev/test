@@ -47,6 +47,7 @@ bin =	test_align \
 	test_ptr_array \
 	test_qfile \
 	test_qsettings \
+	test_qstring \
 	test_qvariant \
 	test_ref \
 	test_sizeof \
@@ -56,7 +57,8 @@ bin =	test_align \
 	test_suid \
 	test_vector \
 	test_virtual \
-	test_read
+	test_read \
+	test_yaml
 
 all: $(bin) tags
 	$(MAKE) -C d_ptr
@@ -93,11 +95,15 @@ qt :=	test_dayofweek \
 	test_getpwnam \
 	test_qfile \
 	test_qsettings \
+	test_qstring \
 	test_qvariant \
 	test_setter
 
 $(qt): CXXFLAGS += $(shell pkg-config --cflags Qt5Core)
 $(qt): LDLIBS += $(shell pkg-config --libs Qt5Core)
+
+test_yaml: CXXFLAGS += $(shell pkg-config --cflags yaml-cpp)
+test_yaml: LDLIBS += $(shell pkg-config --libs yaml-cpp)
 
 moc_dayofweek.cc: test_dayofweek.h
 	moc -o $@ $<
