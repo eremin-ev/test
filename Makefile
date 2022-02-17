@@ -53,6 +53,7 @@ bin =	test_align \
 	test_sizeof \
 	test_setter \
 	test_str_diff \
+	test_strncmp \
 	test_substr_cnt \
 	test_suid \
 	test_vector \
