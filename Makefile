@@ -2,11 +2,11 @@ src ?= .
 VPATH := $(VPATH) $(src)/lib
 WALL = -Wall -Wextra
 WERROR = -Werror
-#DBG = -O0 -g
-DBG ?= -O2 -g
-CFLAGS = $(WALL) $(WERROR) $(DBG) -I$(src)/lib
+DBG = -O0 -g
+#DBG ?= -O2 -g
+override CFLAGS += $(WALL) $(WERROR) $(DBG) -I$(src)/lib
 # -I$(PWD)
-CXXFLAGS = $(WALL) $(DBG) -std=c++17 -fPIC -I$(src)
+override CXXFLAGS += $(WALL) $(WERROR) $(DBG) -std=c++17 -fPIC -I$(src)
 LDLIBS = -lm
 
 bin =	test_align \
@@ -57,6 +57,7 @@ bin =	test_align \
 	test_strncmp \
 	test_substr_cnt \
 	test_suid \
+	test_triv \
 	test_vector \
 	test_virtual \
 	test_read \
@@ -99,7 +100,8 @@ qt :=	test_dayofweek \
 	test_qsettings \
 	test_qstring \
 	test_qvariant \
-	test_setter
+	test_setter \
+	test_triv
 
 $(qt): CXXFLAGS += $(shell pkg-config --cflags Qt5Core)
 $(qt): LDLIBS += $(shell pkg-config --libs Qt5Core)
