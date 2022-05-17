@@ -58,6 +58,7 @@ bin =	test_align \
 	test_substr_cnt \
 	test_suid \
 	test_triv \
+	test_variadic \
 	test_vector \
 	test_virtual \
 	test_read \
@@ -73,7 +74,7 @@ all: $(bin) tags
 
 test_comm: LDLIBS += -lpthread
 
-test_constr test_op: LDLIBS += -lfmt
+test_constr test_op test_variadic: LDLIBS += -lfmt
 
 test_dayofweek: moc_dayofweek.o
 
