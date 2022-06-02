@@ -47,6 +47,7 @@ moc_*.cc
 /test_qvariant
 /test_read
 /test_ref
+/test_ret_local
 /test_setter
 /test_sizeof
 /test_str_diff

@@ -1,7 +1,7 @@
 src ?= .
 VPATH := $(VPATH) $(src)/lib
 WALL = -Wall -Wextra
-WERROR = -Werror
+#WERROR = -Werror
 DBG = -O0 -g
 #DBG ?= -O2 -g
 override CFLAGS += $(WALL) $(WERROR) $(DBG) -I$(src)/lib
@@ -49,7 +49,9 @@ bin =	test_align \
 	test_qsettings \
 	test_qstring \
 	test_qvariant \
+	test_read \
 	test_ref \
+	test_ret_local \
 	test_sizeof \
 	test_setter \
 	test_str_diff \
@@ -61,7 +63,6 @@ bin =	test_align \
 	test_variadic \
 	test_vector \
 	test_virtual \
-	test_read \
 	test_yaml
 
 all: $(bin) tags
