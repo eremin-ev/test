@@ -35,6 +35,7 @@ bin =	test_align \
 	test_line_point \
 	test_list_vs_tree \
 	test_map \
+	test_member_static \
 	test_memmove \
 	test_mmap_chunks \
 	test_op \

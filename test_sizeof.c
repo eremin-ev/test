@@ -21,6 +21,8 @@
 #define TEST_STRING_2	"abcd"
 #define TEST_STRING_3	"123"
 
+const char string4[] = "12345";
+
 /*
  * The following
  *
@@ -78,6 +80,8 @@ int main(void)
 
 	printf("int\t%i\n", foo_int(337, 773));
 	printf("size_t\t%zi\n", foo_size_t(337, 773));
+
+	printf("sizeof(%s) %zu\n", string4, sizeof(string4) - 1);
 
 	test_str(737);
 

@@ -35,6 +35,18 @@ struct C: B {
 	int getC() { return getB(); };
 };
 
+struct Base {
+    int i;
+};
+
+struct Derived : public Base {
+    int a;
+};
+
+struct Derived2 : public Derived, Base {
+    int a;
+};
+
 int main()
 {
 	A<int> a(10);
@@ -45,6 +57,9 @@ int main()
 
 	C c(30);
 	std::cout << "--- c.getC(): " << c.getC() << std::endl;
+
+    Derived2 d2;
+    std::cout << "--- d.value --- " << d2.a << '\n';
 
 	return 0;
 }

@@ -133,6 +133,38 @@ void testPresence()
     qDebug() << "contains(" << n2 << ")" << names.contains(n2);
 }
 
+void testEmpty()
+{
+    QString a = QString();
+    QString b = QStringLiteral("B test string");
+    QString c = QStringLiteral("C test string");
+
+    printf("%s A p %p len %d\n", __func__,
+           a.toUtf8().constData(), a.size());
+
+    printf("%s B p %p s '%s' len %d\n", __func__,
+           b.toUtf8().constData(), b.toUtf8().constData(), b.size());
+
+    printf("%s C p %p s '%s' len %d\n", __func__,
+           b.toUtf8(), b.toUtf8(), b.size());
+}
+
+void testToNumber()
+{
+    QString a("QDBusServer-ffffffffec30d180");
+    QString b("QDBusServer-ffffffffec30fdf0");
+
+    bool ok = false;
+    printf("%s a %lx, ok %d\n", __func__,
+           a.remove(QStringLiteral("QDBusServer-")).toULong(&ok, 16), ok);
+    printf("%s ok %d\n", __func__, ok);
+
+    ok = false;
+    printf("%s b %lx, ok %d\n", __func__,
+           b.remove(QStringLiteral("QDBusServer-")).toULong(&ok, 16), ok);
+    printf("%s ok %d\n", __func__, ok);
+}
+
 int main()
 {
     log_fmt(1000, QStringLiteral("option1"), QStringLiteral("value1"));
@@ -145,6 +177,10 @@ int main()
     testRegExp();
 
     testPresence();
+
+    testEmpty();
+
+    testToNumber();
 
     return 0;
 }
