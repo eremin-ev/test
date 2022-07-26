@@ -29,10 +29,12 @@ static void test2()
 }
 
 namespace {
+
 struct StringVariant {
     QString s;
     QVariant v;
 };
+
 }
 
 Q_DECLARE_METATYPE(StringVariant)
@@ -77,6 +79,18 @@ static void test6(const QString &arg)
     qDebug() << arg.toInt(&ok) << ok;
 }
 
+static void test7()
+{
+    QVariant a(73);
+    QVariant b(a);
+    QVariant e(QMetaType::QVariant, &a);
+    QVariant f(e);
+
+    qDebug() << __func__ << a << b;
+    qDebug() << __func__ << e << e.value<QVariant>();
+    qDebug() << __func__ << f;
+}
+
 int main()
 {
     test1();
@@ -86,6 +100,7 @@ int main()
     test5();
     test6(QStringLiteral("123"));
     test6(QStringLiteral("-123"));
+    test7();
 
     return EXIT_SUCCESS;
 }
