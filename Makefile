@@ -62,6 +62,7 @@ bin =	test_align \
 	test_suid \
 	test_triv \
 	test_variadic \
+	test_vdso \
 	test_vector \
 	test_virtual \
 	test_yaml
