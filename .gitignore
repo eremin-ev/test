@@ -30,6 +30,7 @@ moc_*.cc
 /test_lambda
 /test_line_point
 /test_list_vs_tree
+/test_luks
 /test_map
 /test_member_static
 /test_memmove

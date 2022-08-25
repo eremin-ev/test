@@ -34,6 +34,7 @@ bin =	test_align \
 	test_lambda \
 	test_line_point \
 	test_list_vs_tree \
+	test_luks \
 	test_map \
 	test_member_static \
 	test_memmove \
@@ -115,6 +116,9 @@ test_yaml: LDLIBS += $(shell pkg-config --libs yaml-cpp)
 
 moc_dayofweek.cc: test_dayofweek.h
 	moc -o $@ $<
+
+test_luks: CXXFLAGS += $(shell pkg-config --cflags libcryptsetup)
+test_luks: LDLIBS += $(shell pkg-config --libs libcryptsetup)
 
 tags:
 	ctags -R .
