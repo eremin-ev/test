@@ -14,6 +14,7 @@ moc_*.cc
 /test_dayofweek
 /test_destr
 /test_division_by_zero
+/test_dlopen
 /test_fanotify
 /test_fizzbuzz
 /test_ftempl

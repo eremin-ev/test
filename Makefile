@@ -18,6 +18,7 @@ bin =	test_align \
 	test_dayofweek \
 	test_destr \
 	test_division_by_zero \
+	test_dlopen \
 	test_fanotify \
 	test_fizzbuzz \
 	test_ftempl \
@@ -114,6 +115,8 @@ $(qt): LDLIBS += $(shell pkg-config --libs Qt5Core)
 
 test_yaml: CXXFLAGS += $(shell pkg-config --cflags yaml-cpp)
 test_yaml: LDLIBS += $(shell pkg-config --libs yaml-cpp)
+
+test_dlopen: LDLIBS += -ldl
 
 moc_dayofweek.cc: test_dayofweek.h
 	moc -o $@ $<
