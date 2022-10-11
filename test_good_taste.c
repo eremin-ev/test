@@ -219,9 +219,11 @@ struct node *list_remove_poor(struct node *entry)
 		entry->value = next->value;
 	}
 
-	free(next);
 
 	printf("%s entry %p, next %p\n", __func__, entry, next);
+
+	free(next);
+
 	return NULL;
 }
 
@@ -262,6 +264,36 @@ void list_dump(struct node *head)
 	}
 
 	printf("\n");
+}
+
+void remove_entry_poor(struct node **head, struct node *entry)
+{
+	struct node *prev = NULL;
+	struct node *walk = *head;
+
+	while (walk != entry) {
+		prev = walk;
+		walk = walk->next;
+	}
+
+	if (!prev) {
+		*head = entry->next;
+	} else {
+		prev->next = entry->next;
+	}
+
+	free(entry);
+}
+
+void remove_entry_good(struct node **head, struct node *entry)
+{
+	while ((*head) != entry) {
+		head= &(*head)->next;
+	}
+
+	*head= entry->next;
+
+	free(entry);
 }
 
 int main(void)
