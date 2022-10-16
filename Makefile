@@ -9,7 +9,8 @@ override CFLAGS += $(WALL) $(WERROR) $(DBG) -I$(src)/lib
 override CXXFLAGS += $(WALL) $(WERROR) $(DBG) -std=c++17 -fPIC -I$(src)
 LDLIBS = -lm
 
-bin =	test_align \
+bin =	test_actions \
+	test_align \
 	test_array \
 	test_cast \
 	test_comm \
@@ -100,7 +101,8 @@ test_pipe: spawn-child.o
 
 test_mmap_chunks: LDLIBS += $(shell pkg-config --libs libcrypto)
 
-qt :=	test_dayofweek \
+qt :=	test_actions \
+	test_dayofweek \
 	test_destr \
 	test_getpwnam \
 	test_qfile \

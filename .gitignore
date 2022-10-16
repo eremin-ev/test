@@ -5,6 +5,7 @@
 *.log
 moc_*.cc
 /tags
+/test_actions
 /test_align
 /test_array
 /test_cast
