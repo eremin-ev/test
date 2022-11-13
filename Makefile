@@ -32,6 +32,7 @@ bin =	test_actions \
 	test_inherit \
 	test_inotify \
 	test_is_constexpr \
+	test_iter \
 	test_keyval \
 	test_lambda \
 	test_line_point \
