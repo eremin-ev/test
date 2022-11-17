@@ -165,6 +165,24 @@ void testToNumber()
     printf("%s ok %d\n", __func__, ok);
 }
 
+void testSize()
+{
+    QString s = QStringLiteral("Кириллица");
+
+    qDebug() << __func__ << "size" << s.size() << "toUtf8().size()" << s.toUtf8().size();
+}
+
+template <typename T>
+static bool setIfNotNull(T *ptr, T value)
+{
+    if (!ptr) {
+        return false;
+    }
+
+    *ptr = value;
+    return true;
+}
+
 int main()
 {
     log_fmt(1000, QStringLiteral("option1"), QStringLiteral("value1"));
@@ -181,6 +199,16 @@ int main()
     testEmpty();
 
     testToNumber();
+
+    testSize();
+
+    bool ok;
+    bool r = setIfNotNull(&ok, true);
+    qDebug() << __func__ << "ok" << ok << "r" << r;
+
+    bool *ok2 = nullptr;
+    bool r2 = setIfNotNull(ok2, true);
+    qDebug() << __func__ << "ok2" << ok2 << "r2" << r2;
 
     return 0;
 }
