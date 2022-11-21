@@ -57,6 +57,7 @@ bin =	test_actions \
 	test_read \
 	test_ref \
 	test_ret_local \
+	test_ret_no_value \
 	test_sizeof \
 	test_setter \
 	test_str_diff \
