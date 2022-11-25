@@ -40,6 +40,7 @@ bin =	test_actions \
 	test_list_vs_tree \
 	test_luks \
 	test_map \
+	test_map_insert \
 	test_member_static \
 	test_memmove \
 	test_mmap_chunks \
