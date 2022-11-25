@@ -10,6 +10,7 @@ override CXXFLAGS += $(WALL) $(WERROR) $(DBG) -std=c++17 -fPIC -I$(src)
 LDLIBS = -lm
 
 bin =	test_actions \
+	test_aggregate \
 	test_align \
 	test_array \
 	test_cast \
