@@ -69,6 +69,7 @@ bin =	test_actions \
 	test_substr_cnt \
 	test_suid \
 	test_triv \
+	test_uls \
 	test_uninitialized \
 	test_variadic \
 	test_vdso \
