@@ -42,6 +42,7 @@ bin =	test_actions \
 	test_luks \
 	test_map \
 	test_map_insert \
+	test_member \
 	test_member_static \
 	test_memmove \
 	test_mmap_chunks \
