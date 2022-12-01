@@ -46,6 +46,7 @@ bin =	test_actions \
 	test_member_static \
 	test_memmove \
 	test_mmap_chunks \
+	test_negative_int \
 	test_op \
 	test_page \
 	test_pam \
