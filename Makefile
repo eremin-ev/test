@@ -23,6 +23,7 @@ bin =	test_actions \
 	test_division_by_zero \
 	test_dlopen \
 	test_fanotify \
+	test_file_sort \
 	test_fizzbuzz \
 	test_ftempl \
 	test_func \
