@@ -32,6 +32,7 @@ bin =	test_actions \
 	test_good_taste \
 	test_hex2str \
 	test_idxupd \
+	test_inc \
 	test_inherit \
 	test_inotify \
 	test_is_constexpr \
