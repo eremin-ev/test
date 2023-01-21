@@ -77,4 +77,5 @@ moc_*.cc
 /test_vdso
 /test_vector
 /test_virtual
+/test_write
 /test_yaml
