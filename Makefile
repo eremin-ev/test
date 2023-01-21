@@ -67,6 +67,7 @@ bin =	test_actions \
 	test_ret_no_value \
 	test_sizeof \
 	test_setter \
+	test_slicing \
 	test_str_diff \
 	test_string \
 	test_strncmp \
