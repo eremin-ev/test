@@ -81,6 +81,7 @@ bin =	test_actions \
 	test_vector \
 	test_virtual \
 	test_write \
+	test_xoy \
 	test_yaml
 
 all: $(bin) tags
