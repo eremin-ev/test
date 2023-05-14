@@ -30,6 +30,7 @@ bin =	test_actions \
 	test_get_seats \
 	test_getpwnam \
 	test_good_taste \
+	test_heap \
 	test_hex2str \
 	test_idxupd \
 	test_inc \
