@@ -58,6 +58,32 @@ void fixDown(Item a[], int k, int N)
 }
 
 template <typename Item>
+void fixDown0(Item a[], int k, int N)
+{
+    if (k == 0 && N > 1) {
+        int j = 1;
+        if (a[j + 1] < a[j] && j < N - 1) {
+            ++j;
+        }
+        if (a[j] < a[0]) {
+            exch(a[j], a[0]);
+        }
+        k = j;
+    }
+
+    while (2*k < N) {
+        int j = 2*k;
+        if (a[j + 1] < a[j] && j < N - 1) {
+            ++j;
+        }
+        if (a[j] < a[k]) {
+            exch(a[k], a[j]);
+        }
+        k = j;
+    }
+}
+
+template <typename Item>
 PQ<Item>::PQ(int N)
     : m_pq{new Item[N + 1]}
     , m_Nmax{N}
@@ -115,7 +141,9 @@ Item PQ<Item>::peekMax() const
     return m_pq[1];
 }
 
-int main()
+namespace {
+
+static void test_pq()
 {
     PQ<int> pq(10);
 
@@ -138,6 +166,58 @@ int main()
     PQ<int> pq2({3, 4, 45, 34, 35, 83, 13});
 
     std::cout << "max2: " << pq2.peekMax() << '\n';
+}
+
+static void merge(long long a1[], long long a2[], int n, int m)
+{
+    for (int i = 0; i < n; ++i) {
+        if (a2[0] < a1[i]) {
+            exch(a1[i], a2[0]);
+            if (m > 1) {
+                fixDown0(a2, 0, m);
+            }
+        }
+    }
+}
+
+static void ins_sort(long long a[], int n)
+{
+    for (int i = 1; i < n; ++i) {
+        const auto tmp = a[i];
+        int j = i - 1;
+        while (j >= 0 && tmp < a[j]) {
+            a[j + 1] = a[j];
+            --j;
+        }
+        a[j + 1] = tmp;
+    }
+}
+
+static void dump(long long *a, int n)
+{
+    for (int i = 0; i < n; ++i) {
+        std::cout << a[i] << ' ';
+    }
+    std::cout << '\n';
+}
+
+static void test_merge()
+{
+    int n = 4, m = 5;
+    long long a1[] = {3, 22, 55, 777};
+    long long a2[] = {0, 2, 8, 102, 113};
+    merge(a1, a2, n, m);
+    ins_sort(a2 + 1, m - 1);
+    dump(a1, n);
+    dump(a2, m);
+}
+
+} // anonymous namespace
+
+int main()
+{
+    test_pq();
+    test_merge();
 
     return 0;
 }
