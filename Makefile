@@ -13,6 +13,7 @@ bin =	test_actions \
 	test_aggregate \
 	test_align \
 	test_array \
+	test_binary_search \
 	test_bitpopcnt \
 	test_cast \
 	test_comm \
