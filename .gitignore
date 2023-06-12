@@ -64,6 +64,7 @@ moc_*.cc
 /test_ref
 /test_ret_local
 /test_ret_no_value
+/test_second_largest
 /test_setter
 /test_sizeof
 /test_slicing
