@@ -68,6 +68,7 @@ bin =	test_actions \
 	test_ret_local \
 	test_ret_no_value \
 	test_sizeof \
+	test_second_largest \
 	test_setter \
 	test_slicing \
 	test_str_diff \
