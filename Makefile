@@ -76,6 +76,7 @@ bin =	test_actions \
 	test_strncmp \
 	test_substr_cnt \
 	test_suid \
+	test_task_scheduler_abc \
 	test_triv \
 	test_uls \
 	test_uninitialized \
