@@ -40,6 +40,7 @@ bin =	test_actions \
 	test_is_constexpr \
 	test_iter \
 	test_keyval \
+	test_klengthpref \
 	test_lambda \
 	test_line_point \
 	test_list_vs_tree \
