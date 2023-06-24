@@ -82,6 +82,7 @@ bin =	test_actions \
 	test_task_scheduler_abc \
 	test_triv \
 	test_uls \
+	test_uniq_rows_in_bool_matrix \
 	test_uninitialized \
 	test_variadic \
 	test_vdso \
