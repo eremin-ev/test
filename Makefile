@@ -75,6 +75,7 @@ bin =	test_actions \
 	test_str_diff \
 	test_string \
 	test_strncmp \
+	test_subarray_sum \
 	test_substr_cnt \
 	test_suid \
 	test_task_scheduler_abc \
