@@ -50,6 +50,7 @@ bin =	test_actions \
 	test_member \
 	test_member_static \
 	test_memmove \
+	test_missing_number \
 	test_mmap_chunks \
 	test_negative_int \
 	test_op \
