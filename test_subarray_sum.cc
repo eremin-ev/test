@@ -58,21 +58,13 @@
  * [1] https://practice.geeksforgeeks.org/problems/subarray-with-given-sum-1587115621/1
  */
 
+#include "lib/util.h"
+
 #include <iostream>
 #include <iterator>
 #include <vector>
 
 namespace {
-
-template <typename T>
-std::ostream &operator<<(std::ostream &os, const std::vector<T> &v)
-{
-    std::ostream_iterator<T> oit(std::cout, ", ");
-    //*oit = '{';
-    std::copy(v.begin(), v.end(), oit);
-    //*oit = '}';
-    return os;
-}
 
 // Function to find a continuous sub-array which adds up to a given number.
 static std::vector<int> subarraySum(const std::vector<int> A, int N, long long S)
