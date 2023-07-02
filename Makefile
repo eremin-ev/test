@@ -43,6 +43,7 @@ bin =	test_actions \
 	test_klengthpref \
 	test_lambda \
 	test_line_point \
+	test_list_merge \
 	test_list_vs_tree \
 	test_luks \
 	test_map \
