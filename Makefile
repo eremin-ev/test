@@ -15,6 +15,7 @@ bin =	test_actions \
 	test_array \
 	test_binary_search \
 	test_bitpopcnt \
+	test_bt_to_dll \
 	test_cast \
 	test_comm \
 	test_constr \
