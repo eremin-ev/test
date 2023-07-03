@@ -85,6 +85,7 @@
 #include <iostream>
 #include <queue>
 #include <sstream>
+#include <stack>
 #include <string>
 
 namespace {
@@ -182,6 +183,8 @@ static Node *buildTree(std::string str)
 /* Function to print nodes in a given doubly linked list */
 static void printList(Node *node)
 {
+    std::cout << __func__ << '\n';
+
     Node *prev = nullptr;
     while (node) {
         std::cout << node->data << " ";
@@ -199,14 +202,107 @@ static void printList(Node *node)
 
 static void inorder(Node *root)
 {
-   if (!root) {
-       return;
-   }
+    if (!root) {
+        return;
+    }
 
-   inorder(root->left);
-   std::cout << root->data << ' ';
-   inorder(root->right);
-   std::cout << '\n';
+    inorder(root->left);
+    std::cout << root->data << ' ';
+    inorder(root->right);
+}
+
+static const Node *next_on_level(int level, std::stack<const Node *> &parent)
+{
+    if (parent.empty()) {
+        return nullptr;
+    }
+
+    int cur_level = level;
+    bool go_right = true;
+    const Node *p = nullptr;
+
+    do {
+        p = parent.top();
+        parent.pop();
+        --cur_level;
+        if (p->right) {
+            break;
+        }
+    } while (!parent.empty());
+
+    if (go_right && p->right) {
+        parent.push(p);
+        p = p->right;
+        go_right = false;
+        ++cur_level;
+    }
+
+    while (p && cur_level < level) {
+        if (p->left) {
+            parent.push(p);
+            p = p->left;
+            ++cur_level;
+        } else if (p->right) {
+            parent.push(p);
+            p = p->right;
+            ++cur_level;
+        } else {
+            // Cannot continue descending into levels
+            return nullptr;
+        }
+    }
+
+    return p;
+}
+
+static void printBinaryTree(const Node *root)
+{
+    if (!root) {
+        return;
+    }
+
+    std::stack<const Node *> parent;
+    const Node *p = root;
+
+    int level = 1;
+    int level_current = 0;
+    int level_printed = 0;
+
+    //if (level < level_printed) {
+        std::cout << p->data << '\n';
+    //}
+
+    parent.push(p);
+    p = p->left;
+    ++level_current;
+
+        //std::cout << p->data << ' ';
+
+    parent.push(p);
+    p = p->left;
+    ++level_current;
+
+        std::cout << p->data << ' ';
+
+    do {
+        p = next_on_level(level_current, parent);
+        std::cout << p->data << ' ';
+    } while (p);
+
+    //p = parent.top();
+    //parent.pop();
+
+    //parent.push(p);
+    //p = p->right;
+
+    //    std::cout << p->data << ' ';
+
+    //p = parent.top();
+    //parent.pop();
+
+    //printBinaryTree(root->left);
+    //std::cout << root->data << ' ';
+    //printBinaryTree(root->right);
 }
 
 } // anonymous namespace
@@ -233,7 +329,14 @@ int main()
         std::string inp;
         getline(std::cin, inp);
         Node *root = buildTree(inp);
+
+        std::cout << "inorder: ";
         inorder(root);
+        std::cout << '\n';
+
+        std::cout << "printBinaryTree:\n";
+        printBinaryTree(root);
+        std::cout << '\n';
 
         Solution ob;
         Node *head = ob.bToDLL(root);
