@@ -211,32 +211,50 @@ static void inorder(Node *root)
     inorder(root->right);
 }
 
-static const Node *next_on_level(int level, std::stack<const Node *> &parent)
+static const Node *next_on_level(const Node *node, int level, std::stack<const Node *> &parent)
 {
     if (parent.empty()) {
         return nullptr;
     }
 
     int cur_level = level;
-    bool go_right = true;
     const Node *p = nullptr;
+    const Node *p_prev = node;
 
-    do {
+    // Go up to the next predecessor which has right child different from us
+    while (true) {
         p = parent.top();
         parent.pop();
         --cur_level;
-        if (p->right) {
+        if (p->right && p->right != p_prev) {
             break;
         }
-    } while (!parent.empty());
+        if (parent.empty()) {
+            break;
+        }
+        p_prev = p;
+    }
 
-    if (go_right && p->right) {
+    // If walked up to the root from the right subtree, no nodes left on
+    // the desired level, give up
+    if (parent.empty() && p->right == p_prev) {
+        return nullptr;
+    }
+
+    // Descent to the right subtree
+    if (p->right) {
         parent.push(p);
         p = p->right;
-        go_right = false;
         ++cur_level;
     }
 
+    // Returned back to the source node -- no more left on this level
+    if (p && p->right == node) {
+        return nullptr;
+    }
+
+    // Go through the right subtree to find leftmost child node on the
+    // desired level
     while (p && cur_level < level) {
         if (p->left) {
             parent.push(p);
@@ -282,12 +300,21 @@ static void printBinaryTree(const Node *root)
     p = p->left;
     ++level_current;
 
+        //std::cout << p->data << ' ';
+
+    parent.push(p);
+    p = p->left;
+    ++level_current;
+
         std::cout << p->data << ' ';
 
-    do {
-        p = next_on_level(level_current, parent);
+    while (true) {
+        p = next_on_level(p, level_current, parent);
+        if (!p) {
+            break;
+        }
         std::cout << p->data << ' ';
-    } while (p);
+    };
 
     //p = parent.top();
     //parent.pop();
@@ -332,11 +359,11 @@ int main()
 
         std::cout << "inorder: ";
         inorder(root);
-        std::cout << '\n';
+        std::cout << std::endl;
 
         std::cout << "printBinaryTree:\n";
         printBinaryTree(root);
-        std::cout << '\n';
+        std::cout << std::endl;
 
         Solution ob;
         Node *head = ob.bToDLL(root);
