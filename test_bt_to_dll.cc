@@ -211,6 +211,32 @@ static void inorder(Node *root)
     inorder(root->right);
 }
 
+// Find leftmost child node on the desired level
+static const Node *first_on_level(const Node *root,
+                                  int level,
+                                  std::stack<const Node *> &parent)
+{
+    //std::cout << __func__ << " " << level << " root: " << root->data << '\n';
+    int cur_level = 0;
+    const Node *p = root;
+    while (p && cur_level < level) {
+        if (p->left) {
+            parent.push(p);
+            p = p->left;
+            ++cur_level;
+        } else if (p->right) {
+            parent.push(p);
+            p = p->right;
+            ++cur_level;
+        } else {
+            // Cannot continue descending into levels
+            return nullptr;
+        }
+    }
+
+    return p;
+}
+
 static const Node *next_on_level(const Node *node, int level, std::stack<const Node *> &parent)
 {
     if (parent.empty()) {
@@ -229,16 +255,15 @@ static const Node *next_on_level(const Node *node, int level, std::stack<const N
         if (p->right && p->right != p_prev) {
             break;
         }
-        if (parent.empty()) {
-            break;
-        }
-        p_prev = p;
-    }
 
-    // If walked up to the root from the right subtree, no nodes left on
-    // the desired level, give up
-    if (parent.empty() && p->right == p_prev) {
-        return nullptr;
+        // If walked up to the root from the right subtree, no nodes left on
+        // the desired level, give up
+        if (parent.empty()) {
+            //std::cout << __func__ << "walked up\n";
+            return nullptr;
+        }
+
+        p_prev = p;
     }
 
     // Descent to the right subtree
@@ -266,6 +291,7 @@ static const Node *next_on_level(const Node *node, int level, std::stack<const N
             ++cur_level;
         } else {
             // Cannot continue descending into levels
+            // FIXME need to go up
             return nullptr;
         }
     }
@@ -282,54 +308,35 @@ static void printBinaryTree(const Node *root)
     std::stack<const Node *> parent;
     const Node *p = root;
 
-    int level = 1;
     int level_current = 0;
-    int level_printed = 0;
 
-    //if (level < level_printed) {
-        std::cout << p->data << '\n';
-    //}
-
-    parent.push(p);
-    p = p->left;
-    ++level_current;
-
-        //std::cout << p->data << ' ';
-
-    parent.push(p);
-    p = p->left;
-    ++level_current;
-
-        //std::cout << p->data << ' ';
-
-    parent.push(p);
-    p = p->left;
-    ++level_current;
-
-        std::cout << p->data << ' ';
+    // root
+    std::cout << p->data << '\n';
 
     while (true) {
-        p = next_on_level(p, level_current, parent);
+        ++level_current;
+        p = first_on_level(root, level_current, parent);
         if (!p) {
             break;
         }
+        //const Node *leftmost = p;
+        //parent = std::stack<const Node *>();
         std::cout << p->data << ' ';
-    };
 
-    //p = parent.top();
-    //parent.pop();
+        //std::cout << "parent " << (parent.top())->data << '\n';
 
-    //parent.push(p);
-    //p = p->right;
-
-    //    std::cout << p->data << ' ';
-
-    //p = parent.top();
-    //parent.pop();
-
-    //printBinaryTree(root->left);
-    //std::cout << root->data << ' ';
-    //printBinaryTree(root->right);
+        while (true) {
+            p = next_on_level(p, level_current, parent);
+            if (!p) {
+                break;
+            }
+            std::cout << p->data << ' ';
+        };
+        std::cout << '\n';
+        //p = leftmost;
+        //std::cout << "leftmost " << p->data
+        //          << " parent " << (parent.empty() ? -1 : (parent.top())->data) << '\n';
+    }
 }
 
 } // anonymous namespace
