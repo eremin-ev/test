@@ -136,6 +136,10 @@ qt :=	test_actions \
 	test_setter \
 	test_triv
 
+crypt := test_luks
+
+dm := test_luks
+
 $(qt): CXXFLAGS += $(shell pkg-config --cflags Qt5Core)
 $(qt): LDLIBS += $(shell pkg-config --libs Qt5Core)
 
@@ -147,8 +151,11 @@ test_dlopen: LDLIBS += -ldl
 moc_dayofweek.cc: test_dayofweek.h
 	moc -o $@ $<
 
-test_luks: CXXFLAGS += $(shell pkg-config --cflags libcryptsetup)
-test_luks: LDLIBS += $(shell pkg-config --libs libcryptsetup)
+$(crypt): CXXFLAGS += $(shell pkg-config --cflags libcryptsetup)
+$(crypt): LDLIBS += $(shell pkg-config --libs libcryptsetup)
+
+$(dm): CXXFLAGS += $(shell pkg-config --cflags devmapper)
+$(dm): LDLIBS += $(shell pkg-config --libs devmapper)
 
 tags:
 	ctags -R .
