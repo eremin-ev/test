@@ -61,18 +61,27 @@ struct Node {
     {
         data = x;
         next = nullptr;
-        //std::cout << __func__ << " " << data << '\n';
     }
 };
 
 /* Function to print Nodes in a given linked list */
 static void printList(const Node *n)
 {
-    while (n != nullptr) {
+    while (n) {
         std::cout << n->data << ' ';
         n = n->next;
     }
     std::cout << std::endl;
+}
+
+/* Function to print Nodes in a given linked list */
+static void freeList(const Node *n)
+{
+    while (n) {
+        const Node *next = n->next;
+        delete n;
+        n = next;
+    }
 }
 
 static Node *readLine(int n)
@@ -127,14 +136,14 @@ public:
             return;
         }
 
-        //Node *tmp_del = del;
         Node *tmp_next = del->next;
         if (!tmp_next) {
             return;
         }
 
-        del->next = tmp_next->next;
-        del->data = tmp_next->data;
+        *del = *del->next;
+        //del->next = tmp_next->next;
+        //del->data = tmp_next->data;
         delete tmp_next;
     }
 };
@@ -160,8 +169,7 @@ int main()
         }
 
         printList(head);
-
-        // FIXME free head
+        freeList(head);
     }
 
     return 0;
