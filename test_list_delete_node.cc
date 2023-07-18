@@ -62,6 +62,16 @@ struct Node {
         data = x;
         next = nullptr;
     }
+    Node &operator=(const Node &other)
+    {
+        std::cout << __func__ << '\n';
+        if (data) {
+            delete data;
+        }
+        data = other.data;
+        next = other.next;
+        return *this;
+    }
 };
 
 /* Function to print Nodes in a given linked list */
@@ -99,7 +109,7 @@ static Node *readLine(int n)
     return head;
 }
 
-static Node *findNode(Node *head, int search_for)
+static Node *find_node(Node *head, int search_for)
 {
     Node *current = head;
     while (current) {
@@ -129,9 +139,8 @@ public:
      */
 
     // Function to delete a node without any reference to head pointer.
-    void deleteNode(Node *del)
+    void delete_node(Node *del)
     {
-        // Your code here
         if (!del) {
             return;
         }
