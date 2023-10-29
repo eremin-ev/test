@@ -28,6 +28,7 @@ moc_*.cc
 /test_func
 /test_get_seats
 /test_getpwnam
+/test_gettime
 /test_good_taste
 /test_heap
 /test_hex2str
