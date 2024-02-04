@@ -87,6 +87,7 @@ bin =	test_actions \
 	test_uls \
 	test_uniq_rows_in_bool_matrix \
 	test_uninitialized \
+	test_update_list \
 	test_variadic \
 	test_vdso \
 	test_vector \
@@ -146,6 +147,7 @@ $(qt): LDLIBS += $(shell pkg-config --libs Qt5Core)
 test_yaml: CXXFLAGS += $(shell pkg-config --cflags yaml-cpp)
 test_yaml: LDLIBS += $(shell pkg-config --libs yaml-cpp)
 
+#test_dlopen: LDFLAGS += -Wl,-rpath=/usr/lib
 test_dlopen: LDLIBS += -ldl
 
 moc_dayofweek.cc: test_dayofweek.h
