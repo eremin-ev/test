@@ -85,6 +85,7 @@ moc_*.cc
 /test_uls
 /test_uniq_rows_in_bool_matrix
 /test_uninitialized
+/test_update_list
 /test_variadic
 /test_vdso
 /test_vector
