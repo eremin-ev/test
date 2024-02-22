@@ -64,10 +64,8 @@ struct Node {
     }
     Node &operator=(const Node &other)
     {
-        std::cout << __func__ << '\n';
-        if (data) {
-            delete data;
-        }
+        //std::cout << __func__ << '\n';
+        //delete data;
         data = other.data;
         next = other.next;
         return *this;
@@ -75,7 +73,7 @@ struct Node {
 };
 
 /* Function to print Nodes in a given linked list */
-static void printList(const Node *n)
+static void print_list(const Node *n)
 {
     while (n) {
         std::cout << n->data << ' ';
@@ -85,7 +83,7 @@ static void printList(const Node *n)
 }
 
 /* Function to print Nodes in a given linked list */
-static void freeList(const Node *n)
+static void free_list(const Node *n)
 {
     while (n) {
         const Node *next = n->next;
@@ -171,14 +169,14 @@ int main()
 
         int k;
         std::cin >> k;
-        Node *del = findNode(head, k);
+        Node *del = find_node(head, k);
         Solution ob;
         if (del != nullptr && del->next != nullptr) {
-            ob.deleteNode(del);
+            ob.delete_node(del);
         }
 
-        printList(head);
-        freeList(head);
+        print_list(head);
+        free_list(head);
     }
 
     return 0;
