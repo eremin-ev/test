@@ -39,6 +39,7 @@ bin =	test_actions \
 	test_inc \
 	test_inherit \
 	test_inotify \
+	test_integer_overflow \
 	test_is_constexpr \
 	test_iter \
 	test_keyval \
