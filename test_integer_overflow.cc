@@ -193,6 +193,29 @@ static int test_mul_uint()
     return errors;
 }
 
+static int test_mul_int()
+{
+    struct {
+        int a;
+        int b;
+    } cases[] = {
+        //{ .a = -6147483648, .b = 10, },
+        { .a = -614748364, .b = 10, },
+        { .a = -61474836, .b = 10, },
+    };
+
+    for (const auto &c : cases) {
+        int r;
+        if (__builtin_mul_overflow(c.a, c.b, &r)) {
+            std::cout << __func__ <<  " overflow " << c.a << " x " << c.b << '\n';
+        } else {
+            std::cout << __func__ <<  " result " << c.a << " x " << c.b << " = " << r << '\n';
+        }
+    }
+
+    return 0;
+}
+
 } // anonymous namespace
 
 int main()
@@ -200,6 +223,7 @@ int main()
     int errors = 0;
     errors += test_sum_uint();
     errors += test_mul_uint();
+    errors += test_mul_int();
 
     std::cout << "errors " << errors << '\n';
 
