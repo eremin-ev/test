@@ -23,6 +23,7 @@ bin =	test_actions \
 	test_crypto_sock \
 	test_dayofweek \
 	test_destr \
+	test_dfs \
 	test_division_by_zero \
 	test_dlopen \
 	test_fanotify \
