@@ -4,7 +4,11 @@
  *
  * 8. String to Integer (atoi) [1]
  *
- * Medium   Topics   Companies
+ *  Medium
+ *
+ *  Topics: String
+ *
+ *  Companies
  *
  * Implement the myAtoi(string s) function, which converts a string to a
  * 32-bit signed integer (similar to C/C++'s atoi function).
@@ -148,7 +152,7 @@ public:
 
 int main()
 {
-    struct {
+    const struct {
         std::string str;
         int num;
     } cases[] = {
