@@ -66,6 +66,7 @@ bin =	test_actions \
 	test_pam_helper \
 	test_pipe \
 	test_pipe_child \
+	test_placement_new \
 	test_ptr_array \
 	test_qfile \
 	test_qsettings \
