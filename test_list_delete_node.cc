@@ -65,7 +65,6 @@ struct Node {
     Node &operator=(const Node &other)
     {
         //std::cout << __func__ << '\n';
-        //delete data;
         data = other.data;
         next = other.next;
         return *this;
@@ -92,14 +91,20 @@ static void free_list(const Node *n)
     }
 }
 
-static Node *readLine(int n)
+static Node *read_line(int n)
 {
-    int data;
-    std::cin >> data;
+    int data = 1;
+    if (!(std::cin >> data)) {
+        std::cout << __func__ << " no element value\n";
+        return nullptr;
+    }
     Node *head = new Node(data);
     Node *tail = head;
     for (int i = 1; i < n; ++i) {
-        std::cin >> data;
+        if (!(std::cin >> data)) {
+            std::cout << __func__ << " bad element value, skipping the rest\n";
+            return head;
+        }
         tail->next = new Node(data);
         tail = tail->next;
     }
@@ -136,7 +141,12 @@ public:
      *  Attempts No.: 1
      */
 
-    // Function to delete a node without any reference to head pointer.
+    // Function to delete a node without any reference to the head pointer.
+    // struct Node {
+    //     Node *next;
+    //     int data;
+    // };
+    // List example: 33 -> 44 -> 13 -> 17 -> 53
     void delete_node(Node *del)
     {
         if (!del) {
@@ -158,21 +168,37 @@ public:
 int main()
 {
     int t;
-    std::cin >> t;
+    if (!(std::cin >> t)) {
+        std::cout << __func__ << " bad test count\n";
+        return 0;
+    }
+
     while (t--) {
         int n;
-        std::cin >> n;
+        if (!(std::cin >> n)) {
+            std::cout << __func__ << " bad list element count\n";
+            break;
+        }
 
         //std::cout << __func__ << " n " << n << '\n';
 
-        Node *head = readLine(n);
+        Node *head = read_line(n);
+        if (!head) {
+            std::cout << __func__ << " bad input\n";
+            break;
+        }
 
         int k;
-        std::cin >> k;
-        Node *del = find_node(head, k);
-        Solution ob;
-        if (del != nullptr && del->next != nullptr) {
-            ob.delete_node(del);
+        if (std::cin >> k) {
+            Node *del = find_node(head, k);
+            if (del) {
+                if (del->next) {
+                    Solution ob;
+                    ob.delete_node(del);
+                } else {
+                    std::cout << __func__ << " the last element deletion requested, skipping\n";
+                }
+            }
         }
 
         print_list(head);
