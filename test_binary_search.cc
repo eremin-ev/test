@@ -11,7 +11,7 @@
 
 namespace {
 
-int binarysearch(int arr[], int n, int k)
+int binarysearch(const int arr[], int n, int k)
 {
         if (!n) {
             return -1;
@@ -52,24 +52,24 @@ int binarysearch(int arr[], int n, int k)
 
 int main()
 {
-    int arr1[] = {1, 2, 3, 4, 5};
-    int arr2[] = {11, 22, 33, 44, 55};
-    struct test_bs {
-        int *arr; // array
-        int n;    // arrray size
-        int k;    // search for element
-        int exp;  // expected index
+    const int arr1[] = {1, 2, 3, 4, 5, 7, 13};
+    const int arr2[] = {11, 22, 33, 44, 55};
+    const struct test_bs {
+        int n;          // arrray size
+        int k;          // search for element
+        int exp;        // expected index
+        const int *arr; // array
     } cases[] = {
         {
-            .arr = arr1,
-            .n = 5,
+            .n = 6,
             .k = 4,
             .exp = 3,
+            .arr = arr1,
         }, {
-            .arr = arr2,
             .n = 5,
             .k = 445,
             .exp = -1,
+            .arr = arr2,
         }
     };
 
