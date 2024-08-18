@@ -27,6 +27,7 @@ bin =	test_actions \
 	test_dfs \
 	test_division_by_zero \
 	test_dlopen \
+	test_expr \
 	test_fanotify \
 	test_file_sort \
 	test_fizzbuzz \
