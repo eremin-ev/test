@@ -188,6 +188,22 @@ Also
 
     static int baz() {...}
     ```
+- Where semicolon is optional?
+    ```c++
+    struct A {
+        A() {};
+        explicit A(int a) {};
+    private:
+        get_value() const {rerurn m_value};
+        set_value(int a)
+        {
+            m_value = a;
+        };
+    };
+    ```
+
+    See also:<br>
+    - [Optional semicolon in C++](https://stackoverflow.com/questions/11376025/optional-semicolon-in-c)
 
 - What's difference between `std::array` vs `std::vector` (Also,
   heap memory allocation vs Stack memory allocation)
