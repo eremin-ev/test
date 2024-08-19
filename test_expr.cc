@@ -125,30 +125,30 @@ static int gettok()
 // Abstract Syntax Tree (aka Parse Tree)
 //===----------------------------------------------------------------------===//
 
-namespace {
+namespace AST {
 
-/// ExprAST - Base class for all expression nodes.
-class ExprAST {
+/// Expression - Base class for all expression nodes.
+class Expression {
 public:
-    virtual ~ExprAST()
+    virtual ~Expression()
     {}
 
     virtual std::string type() const = 0;
     virtual std::string show() const = 0;
 };
 
-/// NumberExprAST - Expression class for numeric literals like "1.0".
-class NumberExprAST : public ExprAST {
+/// NumberExpr - Expression class for numeric literals like "1.0".
+class NumberExpr : public Expression {
     double m_value;
 
 public:
-    NumberExprAST(double value)
+    NumberExpr(double value)
     : m_value(value)
     {}
 
     std::string type() const override
     {
-        return "NumberExprAST";
+        return "NumberExpr";
     }
 
     std::string show() const override
@@ -157,36 +157,58 @@ public:
     }
 };
 
-/// VariableExprAST - Expression class for referencing a variable, like "a".
-class VariableExprAST : public ExprAST {
+/// VariableExpr - class to store a variable expression, like "a = b + 1".
+class VariableExpr : public Expression {
+    std::string m_name;
+    std::unique_ptr<Expression> m_rhs;
+
+public:
+    VariableExpr(const std::string &name, std::unique_ptr<Expression> rhs)
+    : m_name(std::move(name))
+    , m_rhs(std::move(rhs))
+    {}
+
+    std::string type() const override
+    {
+        return "VariableExpr";
+    }
+
+    std::string show() const override
+    {
+        return " [" + m_name + " = " + m_rhs->show() + "] ";
+    }
+};
+
+/// VariableRef - Expression class for referencing a variable, like "a".
+class VariableRef : public Expression {
     std::string m_name;
 
 public:
-    VariableExprAST(const std::string &name)
+    VariableRef(const std::string &name)
     : m_name(std::move(name))
     {}
 
     std::string type() const override
     {
-        return "VariableExprAST";
+        return "VariableRef";
     }
 
     std::string show() const override
     {
-        return m_name;
+        return " [" + m_name + "] ";
     }
 };
 
-/// BinaryExprAST - Expression class for a binary operator.
-class BinaryExprAST : public ExprAST {
+/// BinaryExpr - Expression class for a binary operator.
+class BinaryExpr : public Expression {
     char m_op;
-    std::unique_ptr<ExprAST> m_lhs;
-    std::unique_ptr<ExprAST> m_rhs;
+    std::unique_ptr<Expression> m_lhs;
+    std::unique_ptr<Expression> m_rhs;
 
 public:
-    BinaryExprAST(char op,
-                  std::unique_ptr<ExprAST> lhs,
-                  std::unique_ptr<ExprAST> rhs)
+    BinaryExpr(char op,
+               std::unique_ptr<Expression> lhs,
+               std::unique_ptr<Expression> rhs)
       : m_op(op)
       , m_lhs(std::move(lhs))
       , m_rhs(std::move(rhs))
@@ -194,30 +216,30 @@ public:
 
     std::string type() const override
     {
-        return "BinaryExprAST";
+        return "BinaryExpr";
     }
 
     std::string show() const override
     {
-        return " (" + m_lhs->show() + m_op + m_rhs->show() + ") ";
+        return " (" + m_lhs->show() + " " + m_op + " " + m_rhs->show() + ") ";
     }
 };
 
-/// CallExprAST - Expression class for function calls.
-class CallExprAST : public ExprAST {
+/// CallExpr - Expression class for function calls.
+class CallExpr : public Expression {
     std::string m_callee;
-    std::vector<std::unique_ptr<ExprAST>> m_argv;
+    std::vector<std::unique_ptr<Expression>> m_argv;
 
 public:
-    CallExprAST(const std::string &callee,
-                std::vector<std::unique_ptr<ExprAST>> argv)
+    CallExpr(const std::string &callee,
+             std::vector<std::unique_ptr<Expression>> argv)
 	: m_callee(std::move(callee))
 	, m_argv(std::move(argv))
 	{}
 
     std::string type() const override
     {
-        return "CallExprAST";
+        return "CallExpr";
     }
 
     std::string show() const override
@@ -226,16 +248,16 @@ public:
     }
 };
 
-/// PrototypeAST - This class represents the "prototype" for a function,
+/// Prototype - This class represents the "prototype" for a function,
 /// which captures its name, and its argument names (thus implicitly the number
 /// of arguments the function takes).
-class PrototypeAST {
+class Prototype {
 	std::string m_name;
 	std::vector<std::string> m_argv;
 
 public:
-	PrototypeAST(const std::string &name,
-				 std::vector<std::string> argv)
+	Prototype(const std::string &name,
+              std::vector<std::string> argv)
 	: m_name(std::move(name))
 	, m_argv(std::move(argv))
     {}
@@ -251,30 +273,30 @@ public:
     }
 };
 
-/// FunctionAST - This class represents a function definition itself.
-class FunctionAST {
-    std::unique_ptr<PrototypeAST> m_proto;
-    std::unique_ptr<ExprAST> m_body;
+/// Function - This class represents a function definition itself.
+class Function {
+    std::unique_ptr<Prototype> m_proto;
+    std::unique_ptr<Expression> m_body;
 
 public:
-    FunctionAST(std::unique_ptr<PrototypeAST> proto,
-                std::unique_ptr<ExprAST> body)
+    Function(std::unique_ptr<Prototype> proto,
+             std::unique_ptr<Expression> body)
     : m_proto(std::move(proto))
     , m_body(std::move(body))
     {}
 
-    const PrototypeAST &proto() const
+    const Prototype &proto() const
     {
         return *m_proto;
     }
 
-    const ExprAST *body() const
+    const Expression *body() const
     {
         return m_body.get();
     }
 };
 
-} // end anonymous namespace
+} // end AST namespace
 
 //===----------------------------------------------------------------------===//
 // Parser
@@ -312,24 +334,24 @@ static int GetTokPrecedence(int CurTok)
 }
 
 /// LogError* - These are little helper functions for error handling.
-std::unique_ptr<ExprAST> LogError(const char *str)
+std::unique_ptr<AST::Expression> LogError(const char *str)
 {
     fprintf(stderr, "Error: %s\n", str);
     return nullptr;
 }
 
-std::unique_ptr<PrototypeAST> LogErrorP(const char *str)
+std::unique_ptr<AST::Prototype> LogErrorP(const char *str)
 {
     LogError(str);
     return nullptr;
 }
 
-static std::unique_ptr<ExprAST> ParseExpression();
+static std::unique_ptr<AST::Expression> ParseExpression();
 
 /// numberexpr ::= number
-static std::unique_ptr<ExprAST> ParseNumberExpr()
+static std::unique_ptr<AST::Expression> ParseNumberExpr()
 {
-    auto result = std::make_unique<NumberExprAST>(NumVal);
+    auto result = std::make_unique<AST::NumberExpr>(NumVal);
 
 	// consume the number
     getNextToken();
@@ -344,7 +366,7 @@ static std::unique_ptr<ExprAST> ParseNumberExpr()
 }
 
 /// parenexpr ::= '(' expression ')'
-static std::unique_ptr<ExprAST> ParseParenExpr()
+static std::unique_ptr<AST::Expression> ParseParenExpr()
 {
     // eat '('
     getNextToken();
@@ -364,24 +386,37 @@ static std::unique_ptr<ExprAST> ParseParenExpr()
     return expr;
 }
 
-/// identifierexpr
-///   ::= identifier
-///   ::= identifier '(' expression* ')'
-static std::unique_ptr<ExprAST> ParseIdentifierExpr()
+// identifierexpr
+//   ::= identifier
+//   ::= identifier = expression
+//   ::= identifier '(' expression* ')'
+static std::unique_ptr<AST::Expression> ParseIdentifierExpr()
 {
     std::string id_name = IdentifierStr;
 
     // eat identifier.
     getNextToken();
 
+    if (CurTok == '=') {
+        // eat '='
+        getNextToken();
+        auto expr = ParseExpression();
+        if (!expr) {
+            printf("%s cannot parse expression for %s\n", __func__, id_name.c_str());
+            return nullptr;
+        }
+
+        return std::make_unique<AST::VariableExpr>(std::move(id_name), std::move(expr));
+    }
+
     // Simple variable ref.
     if (CurTok != '(') {
-        return std::make_unique<VariableExprAST>(id_name);
+        return std::make_unique<AST::VariableRef>(id_name);
     }
 
     // Call.  eat '('
     getNextToken();
-    std::vector<std::unique_ptr<ExprAST>> argv;
+    std::vector<std::unique_ptr<AST::Expression>> argv;
     if (CurTok != ')') {
         while (true) {
             auto arg = ParseExpression();
@@ -406,14 +441,14 @@ static std::unique_ptr<ExprAST> ParseIdentifierExpr()
     // Eat the ')'.
     getNextToken();
 
-    return std::make_unique<CallExprAST>(id_name, std::move(argv));
+    return std::make_unique<AST::CallExpr>(id_name, std::move(argv));
 }
 
 /// primary
 ///   ::= identifierexpr
 ///   ::= numberexpr
 ///   ::= parenexpr
-static std::unique_ptr<ExprAST> ParsePrimary()
+static std::unique_ptr<AST::Expression> ParsePrimary()
 {
     switch (CurTok) {
     case tok_identifier:
@@ -432,8 +467,9 @@ static std::unique_ptr<ExprAST> ParsePrimary()
 
 /// binoprhs
 ///   ::= ('+' primary)*
-static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec,
-                                              std::unique_ptr<ExprAST> lhs) {
+static std::unique_ptr<AST::Expression>
+ParseBinOpRHS(int ExprPrec, std::unique_ptr<AST::Expression> lhs)
+{
     // If this is a binop, find its precedence.
     while (true) {
         int TokPrec = GetTokPrecedence(CurTok);
@@ -465,14 +501,14 @@ static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec,
         }
 
         // Merge lhs/rhs.
-        lhs = std::make_unique<BinaryExprAST>(BinOp, std::move(lhs), std::move(rhs));
+        lhs = std::make_unique<AST::BinaryExpr>(BinOp, std::move(lhs), std::move(rhs));
     }
 }
 
 /// expression
 ///   ::= primary binoprhs
 ///
-static std::unique_ptr<ExprAST> ParseExpression()
+static std::unique_ptr<AST::Expression> ParseExpression()
 {
     auto lhs = ParsePrimary();
     if (!lhs) {
@@ -484,7 +520,7 @@ static std::unique_ptr<ExprAST> ParseExpression()
 
 /// prototype
 ///   ::= id '(' id* ')'
-static std::unique_ptr<PrototypeAST> ParsePrototype()
+static std::unique_ptr<AST::Prototype> ParsePrototype()
 {
     if (CurTok != tok_identifier) {
         return LogErrorP("Expected function name in prototype");
@@ -508,11 +544,11 @@ static std::unique_ptr<PrototypeAST> ParsePrototype()
     // success. eat ')'.
     getNextToken();
 
-    return std::make_unique<PrototypeAST>(func_name, std::move(argv));
+    return std::make_unique<AST::Prototype>(func_name, std::move(argv));
 }
 
 /// definition ::= 'def' prototype expression
-static std::unique_ptr<FunctionAST> ParseDefinition()
+static std::unique_ptr<AST::Function> ParseDefinition()
 {
     // eat def.
     getNextToken();
@@ -527,24 +563,26 @@ static std::unique_ptr<FunctionAST> ParseDefinition()
         return nullptr;
     }
 
-    return std::make_unique<FunctionAST>(std::move(proto), std::move(expr));
+    return std::make_unique<AST::Function>(std::move(proto), std::move(expr));
 }
 
 /// toplevelexpr ::= expression
-static std::unique_ptr<FunctionAST> ParseTopLevelExpr()
+static std::unique_ptr<AST::Function> ParseTopLevelExpr()
 {
-    std::unique_ptr<ExprAST> expr = ParseExpression();
+    std::unique_ptr<AST::Expression> expr = ParseExpression();
     if (!expr) {
         return nullptr;
     }
 
+    using namespace AST;
+
     // Make an anonymous proto.
-    auto proto = std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string>());
-    return std::make_unique<FunctionAST>(std::move(proto), std::move(expr));
+    auto proto = std::make_unique<Prototype>("__anon_expr", std::vector<std::string>());
+    return std::make_unique<Function>(std::move(proto), std::move(expr));
 }
 
 /// external ::= 'extern' prototype
-static std::unique_ptr<PrototypeAST> ParseExtern()
+static std::unique_ptr<AST::Prototype> ParseExtern()
 {
     // eat extern.
     getNextToken();
@@ -576,10 +614,28 @@ static void HandleExtern()
     }
 }
 
+static void handle_identifier()
+{
+    const auto id = ParseIdentifierExpr();
+    //std::unique_ptr<AST::Expression> expr = ParseExpression();
+    //if (!expr) {
+    //    return nullptr;
+    //}
+
+    printf("%s var name '%s'\n", __func__, id->show().c_str());
+
+    //if (ParseExtern()) {
+    //    fprintf(stderr, "Parsed an extern\n");
+    //} else {
+    //    // Skip token for error recovery.
+    //    getNextToken();
+    //}
+}
+
 static void HandleTopLevelExpression()
 {
     // Evaluate a top-level expression into an anonymous function.
-    std::unique_ptr<FunctionAST> func = ParseTopLevelExpr();
+    std::unique_ptr<AST::Function> func = ParseTopLevelExpr();
     if (!func) {
         // Skip token for error recovery.
         getNextToken();
@@ -588,8 +644,8 @@ static void HandleTopLevelExpression()
 
     fprintf(stderr, "Parsed a top-level expr %p\n", func.get());
 
-    PrototypeAST proto = func->proto();
-    const ExprAST *body = func->body();
+    const AST::Prototype proto = func->proto();
+    const AST::Expression *body = func->body();
     fprintf(stderr, "  >>%s(%s);\n", proto.get_name().c_str(), proto.get_argv().c_str());
     fprintf(stderr, "  >>  body %s: '%s';\n", body->type().c_str(), body->show().c_str());
 }
@@ -597,6 +653,11 @@ static void HandleTopLevelExpression()
 /// top ::= definition | external | expression | ';'
 static void MainLoop()
 {
+    fprintf(stderr, "ready> ");
+
+    // Prime the first token.
+    getNextToken();
+
     while (true) {
         fprintf(stderr, "ready> ");
         switch (CurTok) {
@@ -613,6 +674,10 @@ static void MainLoop()
 
         case tok_extern:
             HandleExtern();
+            break;
+
+        case tok_identifier:
+            handle_identifier();
             break;
 
         default:
@@ -634,10 +699,6 @@ int main()
     BinopPrecedence['+'] = 20;
     BinopPrecedence['-'] = 20;
     BinopPrecedence['*'] = 40; // highest.
-
-    // Prime the first token.
-    fprintf(stderr, "ready> ");
-    getNextToken();
 
     // Run the main "interpreter loop" now.
     MainLoop();
