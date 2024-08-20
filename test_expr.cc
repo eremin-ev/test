@@ -40,7 +40,19 @@ enum Token {
 static std::string IdentifierStr; // Filled in if tok_identifier
 static double NumVal;             // Filled in if tok_number
 
-std::string dump_list(const std::vector<std::string> &input)
+std::string show(const std::string &s)
+{
+    return s;
+}
+
+template <typename Ptr>
+std::string show(const Ptr &p)
+{
+    return p->show();
+}
+
+template <typename Ptr>
+std::string dump_list(const std::vector<Ptr> &input, char sep = ',')
 {
     std::string output;
     bool first = true;
@@ -48,9 +60,9 @@ std::string dump_list(const std::vector<std::string> &input)
         if (first) {
             output += '(';
         } else {
-            output += ',';
+            output += sep;
         }
-        output += i;
+        output += show(i);
         first = false;
     }
 
@@ -61,7 +73,7 @@ std::string dump_list(const std::vector<std::string> &input)
     return output;
 }
 
-/// gettok - Return the next token from standard input.
+// gettok - Return the next token from standard input.
 static int gettok()
 {
     static int LastChar = ' ';
@@ -111,8 +123,9 @@ static int gettok()
     }
 
     // Check for end of file.  Don't eat the EOF.
-    if (LastChar == EOF)
+    if (LastChar == EOF) {
         return tok_eof;
+    }
 
     // Otherwise, just return the character as its ascii value.
     int ThisChar = LastChar;
@@ -139,11 +152,12 @@ public:
 
 /// NumberExpr - Expression class for numeric literals like "1.0".
 class NumberExpr : public Expression {
+private:
     double m_value;
 
 public:
     NumberExpr(double value)
-    : m_value(value)
+    : m_value{value}
     {}
 
     std::string type() const override
@@ -159,13 +173,14 @@ public:
 
 /// VariableExpr - class to store a variable expression, like "a = b + 1".
 class VariableExpr : public Expression {
+private:
     std::string m_name;
     std::unique_ptr<Expression> m_rhs;
 
 public:
     VariableExpr(const std::string &name, std::unique_ptr<Expression> rhs)
-    : m_name(std::move(name))
-    , m_rhs(std::move(rhs))
+    : m_name{std::move(name)}
+    , m_rhs{std::move(rhs)}
     {}
 
     std::string type() const override
@@ -181,11 +196,12 @@ public:
 
 /// VariableRef - Expression class for referencing a variable, like "a".
 class VariableRef : public Expression {
+private:
     std::string m_name;
 
 public:
     VariableRef(const std::string &name)
-    : m_name(std::move(name))
+    : m_name{std::move(name)}
     {}
 
     std::string type() const override
@@ -201,6 +217,7 @@ public:
 
 /// BinaryExpr - Expression class for a binary operator.
 class BinaryExpr : public Expression {
+private:
     char m_op;
     std::unique_ptr<Expression> m_lhs;
     std::unique_ptr<Expression> m_rhs;
@@ -209,9 +226,9 @@ public:
     BinaryExpr(char op,
                std::unique_ptr<Expression> lhs,
                std::unique_ptr<Expression> rhs)
-      : m_op(op)
-      , m_lhs(std::move(lhs))
-      , m_rhs(std::move(rhs))
+      : m_op{op}
+      , m_lhs{std::move(lhs)}
+      , m_rhs{std::move(rhs)}
     {}
 
     std::string type() const override
@@ -221,20 +238,21 @@ public:
 
     std::string show() const override
     {
-        return " (" + m_lhs->show() + " " + m_op + " " + m_rhs->show() + ") ";
+        return " (" + m_lhs->show() + " " + m_op + " " + m_rhs->show() + " )";
     }
 };
 
 /// CallExpr - Expression class for function calls.
 class CallExpr : public Expression {
+private:
     std::string m_callee;
     std::vector<std::unique_ptr<Expression>> m_argv;
 
 public:
     CallExpr(const std::string &callee,
              std::vector<std::unique_ptr<Expression>> argv)
-	: m_callee(std::move(callee))
-	, m_argv(std::move(argv))
+	: m_callee{std::move(callee)}
+	, m_argv{std::move(argv)}
 	{}
 
     std::string type() const override
@@ -244,55 +262,59 @@ public:
 
     std::string show() const override
     {
-        return "TODO::FIXME";
+        return "call " + m_callee + " " + dump_list(m_argv);
     }
 };
 
-/// Prototype - This class represents the "prototype" for a function,
-/// which captures its name, and its argument names (thus implicitly the number
-/// of arguments the function takes).
+// Prototype - This class represents the "prototype" for a function,
+// which captures its name, and its argument names (thus implicitly the number
+// of arguments the function takes).
 class Prototype {
+private:
 	std::string m_name;
 	std::vector<std::string> m_argv;
 
 public:
 	Prototype(const std::string &name,
               std::vector<std::string> argv)
-	: m_name(std::move(name))
-	, m_argv(std::move(argv))
+	: m_name{std::move(name)}
+	, m_argv{std::move(argv)}
     {}
 
-    const std::string &get_name() const
+    const std::string &name() const
     {
         return m_name;
     }
 
-    const std::string get_argv() const
+    const std::string argv() const
     {
         return dump_list(m_argv);
     }
 };
 
-/// Function - This class represents a function definition itself.
+// Function - This class represents a function definition itself.
 class Function {
+private:
     std::unique_ptr<Prototype> m_proto;
     std::unique_ptr<Expression> m_body;
 
 public:
     Function(std::unique_ptr<Prototype> proto,
              std::unique_ptr<Expression> body)
-    : m_proto(std::move(proto))
-    , m_body(std::move(body))
+    : m_proto{std::move(proto)}
+    , m_body{std::move(body)}
     {}
 
-    const Prototype &proto() const
+    std::string name() const
     {
-        return *m_proto;
+        return m_proto->name() + m_proto->argv();
     }
 
-    const Expression *body() const
+    std::string show() const
     {
-        return m_body.get();
+        return m_proto->name() + m_proto->argv()
+               + " = "
+               + m_body->type() + " " + m_body->show();
     }
 };
 
@@ -302,10 +324,11 @@ public:
 // Parser
 //===----------------------------------------------------------------------===//
 
-/// CurTok/getNextToken - Provide a simple token buffer.  CurTok is the current
-/// token the parser is looking at.  getNextToken reads another token from the
-/// lexer and updates CurTok with its results.
+// CurTok/getNextToken - Provide a simple token buffer.  CurTok is the current
+// token the parser is looking at.  getNextToken reads another token from the
+// lexer and updates CurTok with its results.
 static int CurTok;
+
 static int getNextToken()
 {
     CurTok = gettok();
@@ -313,11 +336,11 @@ static int getNextToken()
     return CurTok;
 }
 
-/// BinopPrecedence - This holds the precedence for each binary operator that is
-/// defined.
+// BinopPrecedence - This holds the precedence for each binary operator that is
+// defined.
 static std::map<char, int> BinopPrecedence;
 
-/// GetTokPrecedence - Get the precedence of the pending binary operator token.
+// GetTokPrecedence - Get the precedence of the pending binary operator token.
 static int GetTokPrecedence(int CurTok)
 {
     if (!isascii(CurTok)) {
@@ -325,10 +348,12 @@ static int GetTokPrecedence(int CurTok)
     }
 
     // Make sure it's a declared binop.
-    int TokPrec = BinopPrecedence[CurTok];
-    if (TokPrec <= 0) {
+    const auto i = BinopPrecedence.find(CurTok);
+    if (i == BinopPrecedence.cend()) {
         return -1;
     }
+
+    int TokPrec = i->second;
 
     return TokPrec;
 }
@@ -348,7 +373,7 @@ std::unique_ptr<AST::Prototype> LogErrorP(const char *str)
 
 static std::unique_ptr<AST::Expression> ParseExpression();
 
-/// numberexpr ::= number
+// numberexpr ::= number
 static std::unique_ptr<AST::Expression> ParseNumberExpr()
 {
     auto result = std::make_unique<AST::NumberExpr>(NumVal);
@@ -365,7 +390,7 @@ static std::unique_ptr<AST::Expression> ParseNumberExpr()
     return result;
 }
 
-/// parenexpr ::= '(' expression ')'
+// parenexpr ::= '(' expression ')'
 static std::unique_ptr<AST::Expression> ParseParenExpr()
 {
     // eat '('
@@ -397,9 +422,11 @@ static std::unique_ptr<AST::Expression> ParseIdentifierExpr()
     // eat identifier.
     getNextToken();
 
+    // assignment
     if (CurTok == '=') {
         // eat '='
         getNextToken();
+
         auto expr = ParseExpression();
         if (!expr) {
             printf("%s cannot parse expression for %s\n", __func__, id_name.c_str());
@@ -414,7 +441,7 @@ static std::unique_ptr<AST::Expression> ParseIdentifierExpr()
         return std::make_unique<AST::VariableRef>(id_name);
     }
 
-    // Call.  eat '('
+    // Function call.  eat '('
     getNextToken();
     std::vector<std::unique_ptr<AST::Expression>> argv;
     if (CurTok != ')') {
@@ -518,8 +545,8 @@ static std::unique_ptr<AST::Expression> ParseExpression()
     return ParseBinOpRHS(0, std::move(lhs));
 }
 
-/// prototype
-///   ::= id '(' id* ')'
+// prototype
+//   ::= id '(' id* ')'
 static std::unique_ptr<AST::Prototype> ParsePrototype()
 {
     if (CurTok != tok_identifier) {
@@ -527,6 +554,8 @@ static std::unique_ptr<AST::Prototype> ParsePrototype()
     }
 
     std::string func_name = IdentifierStr;
+
+    // eat func name
     getNextToken();
 
     if (CurTok != '(') {
@@ -534,8 +563,18 @@ static std::unique_ptr<AST::Prototype> ParsePrototype()
     }
 
     std::vector<std::string> argv;
-    while (getNextToken() == tok_identifier)
+    getNextToken();
+    while (CurTok == tok_identifier) {
         argv.push_back(IdentifierStr);
+
+        // eat identifier
+        getNextToken();
+
+        if (CurTok == ',') {
+            // eat ','
+            getNextToken();
+        }
+    }
 
     if (CurTok != ')') {
         return LogErrorP("Expected ')' in prototype");
@@ -596,12 +635,16 @@ static std::unique_ptr<AST::Prototype> ParseExtern()
 
 static void HandleDefinition()
 {
-    if (ParseDefinition()) {
-        fprintf(stderr, "Parsed a function definition.\n");
-    } else {
+    const std::unique_ptr<AST::Function> func = ParseDefinition();
+    if (!func) {
         // Skip token for error recovery.
         getNextToken();
+        return;
     }
+
+    printf("Parsed a function definition '%s' => '%s'\n",
+           func->name().c_str(),
+           func->show().c_str());
 }
 
 static void HandleExtern()
@@ -617,6 +660,10 @@ static void HandleExtern()
 static void handle_identifier()
 {
     const auto id = ParseIdentifierExpr();
+    if (!id) {
+        printf("%s cannot parse identifier expr\n", __func__);
+        return;
+    }
     //std::unique_ptr<AST::Expression> expr = ParseExpression();
     //if (!expr) {
     //    return nullptr;
@@ -642,12 +689,7 @@ static void HandleTopLevelExpression()
         return;
     }
 
-    fprintf(stderr, "Parsed a top-level expr %p\n", func.get());
-
-    const AST::Prototype proto = func->proto();
-    const AST::Expression *body = func->body();
-    fprintf(stderr, "  >>%s(%s);\n", proto.get_name().c_str(), proto.get_argv().c_str());
-    fprintf(stderr, "  >>  body %s: '%s';\n", body->type().c_str(), body->show().c_str());
+    printf("Parsed a top-level expr '%s'\n", func->show().c_str());
 }
 
 /// top ::= definition | external | expression | ';'
@@ -659,7 +701,7 @@ static void MainLoop()
     getNextToken();
 
     while (true) {
-        fprintf(stderr, "ready> ");
+        printf("ready> ");
         switch (CurTok) {
         case tok_eof:
             return;
