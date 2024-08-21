@@ -140,6 +140,19 @@ static int gettok()
 
 namespace AST {
 
+std::string func_signature(const std::string &name,
+                           const std::vector<std::string> &argv)
+{
+    std::string out = name;
+    out += '(';
+    for (unsigned i = 0; i < argv.size(); ++i) {
+        // Improvement: argument type
+        out += 'd';
+    }
+    out += ')';
+    return out;
+}
+
 /// Expression - Base class for all expression nodes.
 class Expression {
 public:
@@ -147,6 +160,7 @@ public:
     {}
 
     virtual std::string type() const = 0;
+    virtual std::string name() const = 0;
     virtual std::string show() const = 0;
 };
 
@@ -163,6 +177,11 @@ public:
     std::string type() const override
     {
         return "NumberExpr";
+    }
+
+    std::string name() const override
+    {
+        return "<unnamed>";
     }
 
     std::string show() const override
@@ -188,9 +207,14 @@ public:
         return "VariableExpr";
     }
 
+    std::string name() const override
+    {
+        return m_name;
+    }
+
     std::string show() const override
     {
-        return " [" + m_name + " = " + m_rhs->show() + "] ";
+        return " [" + name() + " = " + m_rhs->show() + "] ";
     }
 };
 
@@ -207,6 +231,11 @@ public:
     std::string type() const override
     {
         return "VariableRef";
+    }
+
+    std::string name() const override
+    {
+        return m_name;
     }
 
     std::string show() const override
@@ -236,6 +265,11 @@ public:
         return "BinaryExpr";
     }
 
+    std::string name() const override
+    {
+        return "<unnamed>";
+    }
+
     std::string show() const override
     {
         return " (" + m_lhs->show() + " " + m_op + " " + m_rhs->show() + " )";
@@ -247,17 +281,28 @@ class CallExpr : public Expression {
 private:
     std::string m_callee;
     std::vector<std::unique_ptr<Expression>> m_argv;
+    std::vector<std::string> m_argv_list;
 
 public:
     CallExpr(const std::string &callee,
              std::vector<std::unique_ptr<Expression>> argv)
 	: m_callee{std::move(callee)}
 	, m_argv{std::move(argv)}
-	{}
+	{
+        for (unsigned i = 0; i < m_argv.size(); ++i) {
+            // Improvement: argument type
+            m_argv_list.push_back("d");
+        }
+    }
 
     std::string type() const override
     {
         return "CallExpr";
+    }
+
+    std::string name() const override
+    {
+        return func_signature(m_callee, m_argv_list);
     }
 
     std::string show() const override
@@ -286,9 +331,9 @@ public:
         return m_name;
     }
 
-    const std::string argv() const
+    const std::vector<std::string> argv() const
     {
-        return dump_list(m_argv);
+        return m_argv;
     }
 };
 
@@ -307,16 +352,18 @@ public:
 
     std::string name() const
     {
-        return m_proto->name() + m_proto->argv();
+        return func_signature(m_proto->name(), m_proto->argv());
     }
 
     std::string show() const
     {
-        return m_proto->name() + m_proto->argv()
+        return m_proto->name() + dump_list(m_proto->argv())
                + " = "
                + m_body->type() + " " + m_body->show();
     }
 };
+
+static std::map<std::string, const Function *> FunctionTable;
 
 } // end AST namespace
 
@@ -645,6 +692,8 @@ static void HandleDefinition()
     printf("Parsed a function definition '%s' => '%s'\n",
            func->name().c_str(),
            func->show().c_str());
+
+    AST::FunctionTable[func->name()] = func.get();
 }
 
 static void HandleExtern()
@@ -670,6 +719,13 @@ static void handle_identifier()
     //}
 
     printf("%s var name '%s'\n", __func__, id->show().c_str());
+
+    if (id->type() == "CallExpr") {
+        const auto f = AST::FunctionTable.find(id->name());
+        if (f == AST::FunctionTable.cend()) {
+            printf("%s func '%s' not found\n", __func__, id->name().c_str());
+        }
+    }
 
     //if (ParseExtern()) {
     //    fprintf(stderr, "Parsed an extern\n");
