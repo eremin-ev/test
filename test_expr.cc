@@ -48,7 +48,7 @@ std::string show(const std::string &s)
 template <typename Ptr>
 std::string show(const Ptr &p)
 {
-    return p->show();
+    return p->value();
 }
 
 template <typename Ptr>
@@ -145,15 +145,22 @@ std::string func_signature(const std::string &name,
 {
     std::string out = name;
     out += '(';
+    bool first = true;
+    char sep = ',';
+    // Improvement: argument type
+    char arg_type = 'd';
     for (unsigned i = 0; i < argv.size(); ++i) {
-        // Improvement: argument type
-        out += 'd';
+        if (!first) {
+            out += sep;
+        }
+        out += arg_type;
+        first = false;
     }
     out += ')';
     return out;
 }
 
-/// Expression - Base class for all expression nodes.
+// Expression - Base class for all expression nodes.
 class Expression {
 public:
     virtual ~Expression()
@@ -161,154 +168,7 @@ public:
 
     virtual std::string type() const = 0;
     virtual std::string name() const = 0;
-    virtual std::string show() const = 0;
-};
-
-/// NumberExpr - Expression class for numeric literals like "1.0".
-class NumberExpr : public Expression {
-private:
-    double m_value;
-
-public:
-    NumberExpr(double value)
-    : m_value{value}
-    {}
-
-    std::string type() const override
-    {
-        return "NumberExpr";
-    }
-
-    std::string name() const override
-    {
-        return "<unnamed>";
-    }
-
-    std::string show() const override
-    {
-        return std::to_string(m_value);
-    }
-};
-
-/// VariableExpr - class to store a variable expression, like "a = b + 1".
-class VariableExpr : public Expression {
-private:
-    std::string m_name;
-    std::unique_ptr<Expression> m_rhs;
-
-public:
-    VariableExpr(const std::string &name, std::unique_ptr<Expression> rhs)
-    : m_name{std::move(name)}
-    , m_rhs{std::move(rhs)}
-    {}
-
-    std::string type() const override
-    {
-        return "VariableExpr";
-    }
-
-    std::string name() const override
-    {
-        return m_name;
-    }
-
-    std::string show() const override
-    {
-        return " [" + name() + " = " + m_rhs->show() + "] ";
-    }
-};
-
-/// VariableRef - Expression class for referencing a variable, like "a".
-class VariableRef : public Expression {
-private:
-    std::string m_name;
-
-public:
-    VariableRef(const std::string &name)
-    : m_name{std::move(name)}
-    {}
-
-    std::string type() const override
-    {
-        return "VariableRef";
-    }
-
-    std::string name() const override
-    {
-        return m_name;
-    }
-
-    std::string show() const override
-    {
-        return " [" + m_name + "] ";
-    }
-};
-
-/// BinaryExpr - Expression class for a binary operator.
-class BinaryExpr : public Expression {
-private:
-    char m_op;
-    std::unique_ptr<Expression> m_lhs;
-    std::unique_ptr<Expression> m_rhs;
-
-public:
-    BinaryExpr(char op,
-               std::unique_ptr<Expression> lhs,
-               std::unique_ptr<Expression> rhs)
-      : m_op{op}
-      , m_lhs{std::move(lhs)}
-      , m_rhs{std::move(rhs)}
-    {}
-
-    std::string type() const override
-    {
-        return "BinaryExpr";
-    }
-
-    std::string name() const override
-    {
-        return "<unnamed>";
-    }
-
-    std::string show() const override
-    {
-        return " (" + m_lhs->show() + " " + m_op + " " + m_rhs->show() + " )";
-    }
-};
-
-/// CallExpr - Expression class for function calls.
-class CallExpr : public Expression {
-private:
-    std::string m_callee;
-    std::vector<std::unique_ptr<Expression>> m_argv;
-    std::vector<std::string> m_argv_list;
-
-public:
-    CallExpr(const std::string &callee,
-             std::vector<std::unique_ptr<Expression>> argv)
-	: m_callee{std::move(callee)}
-	, m_argv{std::move(argv)}
-	{
-        for (unsigned i = 0; i < m_argv.size(); ++i) {
-            // Improvement: argument type
-            m_argv_list.push_back("d");
-        }
-    }
-
-    std::string type() const override
-    {
-        return "CallExpr";
-    }
-
-    std::string name() const override
-    {
-        return func_signature(m_callee, m_argv_list);
-    }
-
-    std::string show() const override
-    {
-        return "call " + m_callee + " " + dump_list(m_argv);
-    }
+    virtual std::string value() const = 0;
 };
 
 // Prototype - This class represents the "prototype" for a function,
@@ -316,14 +176,14 @@ public:
 // of arguments the function takes).
 class Prototype {
 private:
-	std::string m_name;
-	std::vector<std::string> m_argv;
+    std::string m_name;
+    std::vector<std::string> m_argv;
 
 public:
-	Prototype(const std::string &name,
+    Prototype(const std::string &name,
               std::vector<std::string> argv)
-	: m_name{std::move(name)}
-	, m_argv{std::move(argv)}
+    : m_name{std::move(name)}
+    , m_argv{std::move(argv)}
     {}
 
     const std::string &name() const
@@ -355,15 +215,206 @@ public:
         return func_signature(m_proto->name(), m_proto->argv());
     }
 
-    std::string show() const
+    const Prototype *proto() const
+    {
+        return m_proto.get();
+    }
+
+    std::string value() const
     {
         return m_proto->name() + dump_list(m_proto->argv())
                + " = "
-               + m_body->type() + " " + m_body->show();
+               + m_body->type() + " " + m_body->value();
     }
 };
 
-static std::map<std::string, const Function *> FunctionTable;
+static std::map<std::string, std::unique_ptr<Function>> FunctionTable;
+static std::map<std::string, const Expression *> ArgTable;
+
+// NumberExpr - Expression class for numeric literals like "1.0".
+class NumberExpr : public Expression {
+private:
+    double m_value;
+
+public:
+    NumberExpr(double value)
+    : m_value{value}
+    {}
+
+    std::string type() const override
+    {
+        return "NumberExpr";
+    }
+
+    std::string name() const override
+    {
+        return "<unnamed>";
+    }
+
+    std::string value() const override
+    {
+        return std::to_string(m_value);
+    }
+};
+
+// VariableExpr - class to store a variable expression, like "a = b + 1".
+class VariableExpr : public Expression {
+private:
+    std::string m_name;
+    std::unique_ptr<Expression> m_rhs;
+
+public:
+    VariableExpr(const std::string &name, std::unique_ptr<Expression> rhs)
+    : m_name{std::move(name)}
+    , m_rhs{std::move(rhs)}
+    {}
+
+    std::string type() const override
+    {
+        return "VariableExpr";
+    }
+
+    std::string name() const override
+    {
+        return m_name;
+    }
+
+    std::string value() const override
+    {
+        return " [" + name() + " = " + m_rhs->value() + "] ";
+    }
+};
+
+// VariableRef - Expression class for referencing a variable, like "a".
+class VariableRef : public Expression {
+private:
+    std::string m_name;
+
+public:
+    VariableRef(const std::string &name)
+    : m_name{std::move(name)}
+    {}
+
+    std::string type() const override
+    {
+        return "VariableRef";
+    }
+
+    std::string name() const override
+    {
+        return m_name;
+    }
+
+    std::string value() const override
+    {
+        const auto v = ArgTable.find(m_name);
+        if (v == ArgTable.cend()) {
+            return "undefined variable " + m_name;
+        }
+
+        const Expression *expr = v->second;
+        return " [" + m_name + "=" + expr->value() + "] ";
+    }
+};
+
+// BinaryExpr - Expression class for a binary operator.
+class BinaryExpr : public Expression {
+private:
+    char m_op;
+    std::unique_ptr<Expression> m_lhs;
+    std::unique_ptr<Expression> m_rhs;
+
+public:
+    BinaryExpr(char op,
+               std::unique_ptr<Expression> lhs,
+               std::unique_ptr<Expression> rhs)
+      : m_op{op}
+      , m_lhs{std::move(lhs)}
+      , m_rhs{std::move(rhs)}
+    {}
+
+    std::string type() const override
+    {
+        return "BinaryExpr";
+    }
+
+    std::string name() const override
+    {
+        return "<unnamed>";
+    }
+
+    std::string value() const override
+    {
+        return " (" + m_lhs->value() + " " + m_op + " " + m_rhs->value() + " )";
+    }
+};
+
+// CallExpr - Expression class for function calls.
+//
+// Quick test:
+//
+//    echo 'def f(x, y) y + x + 1; f(43); f(1,3); f(4.55, 5.667)' | ./test_expr
+//
+class CallExpr : public Expression {
+private:
+    std::string m_callee;
+    std::vector<std::unique_ptr<Expression>> m_argv;
+    std::vector<std::string> m_argv_list;
+
+public:
+    CallExpr(const std::string &callee,
+             std::vector<std::unique_ptr<Expression>> argv)
+    : m_callee{std::move(callee)}
+    , m_argv{std::move(argv)}
+    {
+        for (unsigned i = 0; i < m_argv.size(); ++i) {
+            // Improvement: argument type
+            m_argv_list.push_back("d");
+        }
+    }
+
+    std::string type() const override
+    {
+        return "CallExpr";
+    }
+
+    std::string name() const override
+    {
+        return func_signature(m_callee, m_argv_list);
+    }
+
+    std::string value() const override
+    {
+        const auto f = AST::FunctionTable.find(name());
+        if (f == AST::FunctionTable.cend()) {
+            //printf("%s func '%s' not found\n", __func__, name().c_str());
+            return "func " + name() + " not found";
+        }
+
+        const AST::Function *func = f->second.get();
+        const AST::Prototype *proto = func->proto();
+        const std::vector<std::string> &argv = proto->argv();
+        printf("%s func '%s', proto %p, m_argv.size() %lu\n", __func__,
+               func->name().c_str(), proto, m_argv.size());
+
+        if (m_argv.size() != argv.size()) {
+            return "func " + name() + " argv mismatch";
+        }
+
+        // Store the function argument values in the ArgTable
+        ArgTable.clear();
+        auto arg_name = argv.cbegin();
+        auto arg_expr = m_argv.cbegin();
+        for (; arg_name != argv.cend() &&
+               arg_expr != m_argv.cend(); ++arg_name, ++arg_expr) {
+            printf("%s arg_name '%s'\n", __func__, arg_name->c_str());
+            ArgTable[*arg_name] = (*arg_expr).get();
+        }
+
+        // + func->name() + " "
+        return "call " + func->value();
+    }
+};
 
 } // end AST namespace
 
@@ -405,7 +456,7 @@ static int GetTokPrecedence(int CurTok)
     return TokPrec;
 }
 
-/// LogError* - These are little helper functions for error handling.
+// LogError* - These are little helper functions for error handling.
 std::unique_ptr<AST::Expression> LogError(const char *str)
 {
     fprintf(stderr, "Error: %s\n", str);
@@ -425,14 +476,14 @@ static std::unique_ptr<AST::Expression> ParseNumberExpr()
 {
     auto result = std::make_unique<AST::NumberExpr>(NumVal);
 
-	// consume the number
+    // consume the number
     getNextToken();
 
     //return std::move(Result);
     // This generates a warning:
     // warning: redundant move in return statement [-Wredundant-move]
     //  226 |     return std::move(Result);
-    //	  |            ~~~~~~~~~^~~~~~~~
+    //      |            ~~~~~~~~~^~~~~~~~
     // test_expr.cc:226:21: note: remove ‘std::move’ call
     return result;
 }
@@ -518,10 +569,10 @@ static std::unique_ptr<AST::Expression> ParseIdentifierExpr()
     return std::make_unique<AST::CallExpr>(id_name, std::move(argv));
 }
 
-/// primary
-///   ::= identifierexpr
-///   ::= numberexpr
-///   ::= parenexpr
+// primary
+//   ::= identifierexpr
+//   ::= numberexpr
+//   ::= parenexpr
 static std::unique_ptr<AST::Expression> ParsePrimary()
 {
     switch (CurTok) {
@@ -539,8 +590,8 @@ static std::unique_ptr<AST::Expression> ParsePrimary()
     }
 }
 
-/// binoprhs
-///   ::= ('+' primary)*
+// binoprhs
+//   ::= ('+' primary)*
 static std::unique_ptr<AST::Expression>
 ParseBinOpRHS(int ExprPrec, std::unique_ptr<AST::Expression> lhs)
 {
@@ -579,9 +630,9 @@ ParseBinOpRHS(int ExprPrec, std::unique_ptr<AST::Expression> lhs)
     }
 }
 
-/// expression
-///   ::= primary binoprhs
-///
+// expression
+//   ::= primary binoprhs
+//
 static std::unique_ptr<AST::Expression> ParseExpression()
 {
     auto lhs = ParsePrimary();
@@ -633,7 +684,7 @@ static std::unique_ptr<AST::Prototype> ParsePrototype()
     return std::make_unique<AST::Prototype>(func_name, std::move(argv));
 }
 
-/// definition ::= 'def' prototype expression
+// definition ::= 'def' prototype expression
 static std::unique_ptr<AST::Function> ParseDefinition()
 {
     // eat def.
@@ -652,7 +703,7 @@ static std::unique_ptr<AST::Function> ParseDefinition()
     return std::make_unique<AST::Function>(std::move(proto), std::move(expr));
 }
 
-/// toplevelexpr ::= expression
+// toplevelexpr ::= expression
 static std::unique_ptr<AST::Function> ParseTopLevelExpr()
 {
     std::unique_ptr<AST::Expression> expr = ParseExpression();
@@ -667,7 +718,7 @@ static std::unique_ptr<AST::Function> ParseTopLevelExpr()
     return std::make_unique<Function>(std::move(proto), std::move(expr));
 }
 
-/// external ::= 'extern' prototype
+// external ::= 'extern' prototype
 static std::unique_ptr<AST::Prototype> ParseExtern()
 {
     // eat extern.
@@ -682,7 +733,7 @@ static std::unique_ptr<AST::Prototype> ParseExtern()
 
 static void HandleDefinition()
 {
-    const std::unique_ptr<AST::Function> func = ParseDefinition();
+    std::unique_ptr<AST::Function> func = ParseDefinition();
     if (!func) {
         // Skip token for error recovery.
         getNextToken();
@@ -691,9 +742,9 @@ static void HandleDefinition()
 
     printf("Parsed a function definition '%s' => '%s'\n",
            func->name().c_str(),
-           func->show().c_str());
+           func->value().c_str());
 
-    AST::FunctionTable[func->name()] = func.get();
+    AST::FunctionTable[func->name()] = std::move(func);
 }
 
 static void HandleExtern()
@@ -718,14 +769,7 @@ static void handle_identifier()
     //    return nullptr;
     //}
 
-    printf("%s var name '%s'\n", __func__, id->show().c_str());
-
-    if (id->type() == "CallExpr") {
-        const auto f = AST::FunctionTable.find(id->name());
-        if (f == AST::FunctionTable.cend()) {
-            printf("%s func '%s' not found\n", __func__, id->name().c_str());
-        }
-    }
+    printf("%s var name '%s' => '%s'\n", __func__, id->name().c_str(), id->value().c_str());
 
     //if (ParseExtern()) {
     //    fprintf(stderr, "Parsed an extern\n");
@@ -745,10 +789,10 @@ static void HandleTopLevelExpression()
         return;
     }
 
-    printf("Parsed a top-level expr '%s'\n", func->show().c_str());
+    printf("Parsed a top-level expr '%s'\n", func->value().c_str());
 }
 
-/// top ::= definition | external | expression | ';'
+// top ::= definition | external | expression | ';'
 static void MainLoop()
 {
     fprintf(stderr, "ready> ");
