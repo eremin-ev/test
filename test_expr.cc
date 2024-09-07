@@ -229,6 +229,7 @@ public:
 };
 
 static std::map<std::string, std::unique_ptr<Function>> FunctionTable;
+static std::map<std::string, std::unique_ptr<Expression>> VariableTable;
 static std::map<std::string, const Expression *> ArgTable;
 
 // NumberExpr - Expression class for numeric literals like "1.0".
@@ -307,13 +308,26 @@ public:
 
     std::string value() const override
     {
-        const auto v = ArgTable.find(m_name);
-        if (v == ArgTable.cend()) {
+        bool have_var = false;
+        const auto v = VariableTable.find(m_name);
+        if (v != VariableTable.cend()) {
+            have_var = true;
+        }
+
+        bool have_arg = false;
+        const auto a = ArgTable.find(m_name);
+        if (a != ArgTable.cend()) {
+            have_arg = true;
+        }
+
+        const Expression *expr = have_arg ? a->second
+                                          : (have_var ? v->second.get() : nullptr);
+
+        if (!expr) {
             return "undefined variable " + m_name;
         }
 
-        const Expression *expr = v->second;
-        return " [" + m_name + "=" + expr->value() + "] ";
+        return expr->value();
     }
 };
 
@@ -394,8 +408,8 @@ public:
         const AST::Function *func = f->second.get();
         const AST::Prototype *proto = func->proto();
         const std::vector<std::string> &argv = proto->argv();
-        printf("%s func '%s', proto %p, m_argv.size() %lu\n", __func__,
-               func->name().c_str(), proto, m_argv.size());
+        //printf("%s func '%s', proto %p, m_argv.size() %lu\n", __func__,
+        //       func->name().c_str(), proto, m_argv.size());
 
         if (m_argv.size() != argv.size()) {
             return "func " + name() + " argv mismatch";
@@ -407,7 +421,7 @@ public:
         auto arg_expr = m_argv.cbegin();
         for (; arg_name != argv.cend() &&
                arg_expr != m_argv.cend(); ++arg_name, ++arg_expr) {
-            printf("%s arg_name '%s'\n", __func__, arg_name->c_str());
+            //printf("%s arg_name '%s'\n", __func__, arg_name->c_str());
             ArgTable[*arg_name] = (*arg_expr).get();
         }
 
@@ -545,11 +559,12 @@ static std::unique_ptr<AST::Expression> ParseIdentifierExpr()
     if (CurTok != ')') {
         while (true) {
             auto arg = ParseExpression();
-            if (arg) {
-                argv.push_back(std::move(arg));
-            } else {
+            if (!arg) {
+                printf("%s cannot parse function args for %s\n", __func__, id_name.c_str());
                 return nullptr;
             }
+
+            argv.push_back(std::move(arg));
 
             if (CurTok == ')') {
                 break;
@@ -759,7 +774,7 @@ static void HandleExtern()
 
 static void handle_identifier()
 {
-    const auto id = ParseIdentifierExpr();
+    auto id = ParseIdentifierExpr();
     if (!id) {
         printf("%s cannot parse identifier expr\n", __func__);
         return;
@@ -769,7 +784,11 @@ static void handle_identifier()
     //    return nullptr;
     //}
 
+    printf("%s\n", __func__);
+
     printf("%s var name '%s' => '%s'\n", __func__, id->name().c_str(), id->value().c_str());
+
+    AST::VariableTable[id->name()] = std::move(id);
 
     //if (ParseExtern()) {
     //    fprintf(stderr, "Parsed an extern\n");
@@ -795,13 +814,11 @@ static void HandleTopLevelExpression()
 // top ::= definition | external | expression | ';'
 static void MainLoop()
 {
-    fprintf(stderr, "ready> ");
+    printf("ready> ");
 
-    // Prime the first token.
     getNextToken();
 
     while (true) {
-        printf("ready> ");
         switch (CurTok) {
         case tok_eof:
             return;
