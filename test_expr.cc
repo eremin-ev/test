@@ -140,8 +140,34 @@ static int gettok()
 
 namespace AST {
 
-std::string func_signature(const std::string &name,
-                           const std::vector<std::string> &argv)
+enum class ExpressionType {
+    NumberExpr = 1,
+    VariableExpr,
+    VariableRef,
+    BinaryExpr,
+    CallExpr,
+};
+
+static std::string type_repr(ExpressionType type)
+{
+    switch (type) {
+    case ExpressionType::NumberExpr:
+        return "NumberExpr";
+    case ExpressionType::VariableExpr:
+        return "VariableExpr";
+    case ExpressionType::VariableRef:
+        return "VariableRef";
+    case ExpressionType::BinaryExpr:
+        return "BinaryExpr";
+    case ExpressionType::CallExpr:
+        return "CallExpr";
+    }
+
+    return "UnknownType";
+}
+
+static std::string func_signature(const std::string &name,
+                                  const std::vector<std::string> &argv)
 {
     std::string out = name;
     out += '(';
@@ -166,7 +192,7 @@ public:
     virtual ~Expression()
     {}
 
-    virtual std::string type() const = 0;
+    virtual ExpressionType type() const = 0;
     virtual std::string name() const = 0;
     virtual std::string value() const = 0;
 };
@@ -224,7 +250,7 @@ public:
     {
         return m_proto->name() + dump_list(m_proto->argv())
                + " = "
-               + m_body->type() + " " + m_body->value();
+               + type_repr(m_body->type()) + " " + m_body->value();
     }
 };
 
@@ -242,9 +268,9 @@ public:
     : m_value{value}
     {}
 
-    std::string type() const override
+    ExpressionType type() const override
     {
-        return "NumberExpr";
+        return ExpressionType::NumberExpr;
     }
 
     std::string name() const override
@@ -270,9 +296,9 @@ public:
     , m_rhs{std::move(rhs)}
     {}
 
-    std::string type() const override
+    ExpressionType type() const override
     {
-        return "VariableExpr";
+        return ExpressionType::VariableExpr;
     }
 
     std::string name() const override
@@ -283,6 +309,11 @@ public:
     std::string value() const override
     {
         return " [" + name() + " = " + m_rhs->value() + "] ";
+    }
+
+    Expression *expr() const
+    {
+        return m_rhs.get();
     }
 };
 
@@ -296,9 +327,9 @@ public:
     : m_name{std::move(name)}
     {}
 
-    std::string type() const override
+    ExpressionType type() const override
     {
-        return "VariableRef";
+        return ExpressionType::VariableRef;
     }
 
     std::string name() const override
@@ -347,9 +378,9 @@ public:
       , m_rhs{std::move(rhs)}
     {}
 
-    std::string type() const override
+    ExpressionType type() const override
     {
-        return "BinaryExpr";
+        return ExpressionType::BinaryExpr;
     }
 
     std::string name() const override
@@ -387,9 +418,9 @@ public:
         }
     }
 
-    std::string type() const override
+    ExpressionType type() const override
     {
-        return "CallExpr";
+        return ExpressionType::CallExpr;
     }
 
     std::string name() const override
@@ -622,7 +653,9 @@ ParseBinOpRHS(int ExprPrec, std::unique_ptr<AST::Expression> lhs)
 
         // Okay, we know this is a binop.
         int BinOp = CurTok;
-        getNextToken(); // eat binop
+
+        // eat binop
+        getNextToken();
 
         // Parse the primary expression after the binary operator.
         auto rhs = ParsePrimary();
@@ -762,14 +795,15 @@ static void HandleDefinition()
     AST::FunctionTable[func->name()] = std::move(func);
 }
 
-static void HandleExtern()
+static void handle_extern()
 {
     if (ParseExtern()) {
         fprintf(stderr, "Parsed an extern\n");
-    } else {
-        // Skip token for error recovery.
-        getNextToken();
+        return;
     }
+
+    // Skip token for error recovery.
+    getNextToken();
 }
 
 static void handle_identifier()
@@ -779,23 +813,13 @@ static void handle_identifier()
         printf("%s cannot parse identifier expr\n", __func__);
         return;
     }
-    //std::unique_ptr<AST::Expression> expr = ParseExpression();
-    //if (!expr) {
-    //    return nullptr;
-    //}
 
-    printf("%s\n", __func__);
+    printf("%s var name '%s', type '%d', value '%s'\n", __func__,
+           id->name().c_str(), static_cast<int>(id->type()), id->value().c_str());
 
-    printf("%s var name '%s' => '%s'\n", __func__, id->name().c_str(), id->value().c_str());
-
-    AST::VariableTable[id->name()] = std::move(id);
-
-    //if (ParseExtern()) {
-    //    fprintf(stderr, "Parsed an extern\n");
-    //} else {
-    //    // Skip token for error recovery.
-    //    getNextToken();
-    //}
+    if (id->type() == AST::ExpressionType::VariableExpr) {
+        AST::VariableTable[id->name()] = std::move(id);
+    }
 }
 
 static void HandleTopLevelExpression()
@@ -832,7 +856,7 @@ static void MainLoop()
             break;
 
         case tok_extern:
-            HandleExtern();
+            handle_extern();
             break;
 
         case tok_identifier:
