@@ -27,6 +27,7 @@ bin =	test_actions \
 	test_dfs \
 	test_division_by_zero \
 	test_dlopen \
+	test_egl_xcb \
 	test_expr \
 	test_fanotify \
 	test_file_sort \
@@ -164,6 +165,8 @@ $(crypt): LDLIBS += $(shell pkg-config --libs libcryptsetup)
 
 $(dm): CXXFLAGS += $(shell pkg-config --cflags devmapper)
 $(dm): LDLIBS += $(shell pkg-config --libs devmapper)
+
+test_egl_xcb: LDLIBS += $(shell pkg-config --libs xcb gl egl)
 
 tags:
 	ctags -R .
