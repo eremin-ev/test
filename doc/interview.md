@@ -149,6 +149,8 @@ Also
 - how qt signals are delivered ?
 - Why `int main()`, `int main(int argc, char *argv[])` and
   `int main(int argc, char *argv[], char *envp[])` are interchangeable?
+    - [When main is defined without parameters, will argc and argv still be present on the stack?](https://stackoverflow.com/questions/3144316/when-main-is-defined-without-parameters-will-argc-and-argv-still-be-present-on)
+    - [What is the difference between the definitions `int main (void)` and `int main (int argc, char *argv[])` and when to use which?](https://stackoverflow.com/questions/66449569/what-is-the-difference-between-the-definitions-int-main-void-and-int-main)
 - Heap allocation vs mmap-ing pages
 - [Why do system calls exist?](https://stackoverflow.com/questions/50626460/why-do-system-calls-exist)
     - A good comment: Read Operating Systems: Three Easy Pieces since an
@@ -162,7 +164,11 @@ Also
 
 ## Questions
 
+- rpm: `Requires` vs `BuildRequires`, `Conflicts` vs `Obsoletes`, what is `%check` for?
 - C function prototype accepting an argument of any type
+    ```c
+    void foo(const void *key, size_t key_size);
+    ```
 - How this compiles, links and runs?
 
     ```c
@@ -194,7 +200,7 @@ Also
         A() {};
         explicit A(int a) {};
     private:
-        get_value() const {rerurn m_value};
+        get_value() const {return m_value};
         set_value(int a)
         {
             m_value = a;
@@ -221,17 +227,28 @@ Also
 
         ```c
         struct Object {
-            int m_old;
+        private:
+            int m_value;
+        public:
+            int value() const;
         };
 
         struct Object {
-            int m_new;
-            int m_old;
+        private:
+            int m_new_value;
+            int m_value;
+        public:
+            int value() const;
+            int new_value() const;
         };
 
         struct Object {
-            int m_old;
-            int m_new;
+        private:
+            int m_value;
+            int m_new_value;
+        public:
+            int value() const;
+            int new_value() const;
         };
         ```
 
@@ -265,10 +282,10 @@ Also
         void remove_entry_v2(node **head, node *entry)
         {
             while ((*head) != entry) {
-                head= &(*head)->next;
+                head = &(*head)->next;
             }
 
-            *head= entry->next;
+            *head = entry->next;
 
             free(entry);
         }
@@ -567,9 +584,9 @@ Also
         return (o << " {" << (a.data ? *a.data : 0) << "}");
     }
 
-    A::A(const int data_) : data{new int}
+    A::A(int data) : m_data{new int}
     {
-        *data = data_;
+        *m_data = data;
     }
 
     A::A(const A &other) : A(*other.data)
@@ -578,10 +595,7 @@ Also
 
     A::~A()
     {
-        if (data != nullptr) {
-            delete data;
-            data = nullptr;
-        }
+        delete m_data;
     }
 
     int main()
@@ -622,14 +636,13 @@ Also
     ```
 - How to search by more than one key?
     ```
-
     struct Element {
         std::string name;
         std::string color;
         int priority;
     };
 
-        //bool operator<(const Element &rhs) const;
+    // bool operator<(const Element &rhs) const;
     bool Element::operator<(const Element &rhs) const
     {
         return priority < rhs.priority;
