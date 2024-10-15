@@ -31,6 +31,7 @@ moc_*.cc
 /test_fizzbuzz
 /test_ftempl
 /test_func
+/test_functor
 /test_get_seats
 /test_getpwnam
 /test_gettime

@@ -34,6 +34,7 @@ bin =	test_actions \
 	test_fizzbuzz \
 	test_ftempl \
 	test_func \
+	test_functor \
 	test_get_seats \
 	test_getpwnam \
 	test_good_taste \
