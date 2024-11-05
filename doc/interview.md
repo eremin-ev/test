@@ -343,6 +343,12 @@ Also
     - red-rocket-computing / Buddy Allocator<br>
       https://github.com/red-rocket-computing/buddy-alloc/tree/master
 
+- What's going on?
+
+    ```shell
+    (echo hello; echo world) > output.txt
+    ```
+
 - Relocatable vs. Position-Independent Code (See
   ["Relocatable vs. Position-Independent Code"](http://davidad.github.io/blog/2014/02/19/relocatable-vs-position-independent-code-or/)
   blog post [5] for some details)
