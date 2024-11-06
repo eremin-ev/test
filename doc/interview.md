@@ -222,18 +222,20 @@ Also
         - Who cleans parameters from the stack (caller/callee)
         - Where the return value is placed for return
         - How exceptions propagate (??)
+
 - How to ensure ABI compatibility
+
     - Pimpl (Private Implementation), opaque pointer
 
-        ```c
-        struct Object {
+        ```c++
+        struct A {
         private:
             int m_value;
         public:
             int value() const;
         };
 
-        struct Object {
+        struct A {
         private:
             int m_new_value;
             int m_value;
@@ -242,7 +244,7 @@ Also
             int new_value() const;
         };
 
-        struct Object {
+        struct A {
         private:
             int m_value;
             int m_new_value;
@@ -251,6 +253,8 @@ Also
             int new_value() const;
         };
         ```
+
+    - [Pimpl idiom vs Pure virtual class interface](https://stackoverflow.com/questions/825018/pimpl-idiom-vs-pure-virtual-class-interface)
 
 - Programming taste
     - Poor
@@ -870,10 +874,39 @@ Also
             return idx;
     }
     ```
-- C++ class virtual table (vtable): what's this, how and where is it stored?
+- C++ class virtual table (vtable) and virtual table pointer (vpointer or vptr):
+  what are these, how and where are they stored?
 
-  - Undefined reference to vtable<br>
-    https://stackoverflow.com/questions/3065154/undefined-reference-to-vtable
+  - [How are virtual functions and vtable implemented?](https://stackoverflow.com/questions/99297/how-are-virtual-functions-and-vtable-implemented)
+
+  - [Undefined reference to vtable](https://stackoverflow.com/questions/3065154/undefined-reference-to-vtable)
+
+  - [Abstract Class vs Interface in C++ [duplicate]](https://stackoverflow.com/questions/12854778/abstract-class-vs-interface-in-c)
+
+  - [How do you declare an interface in C++?](https://stackoverflow.com/questions/318064/how-do-you-declare-an-interface-in-c)
+
+  - [Why a pure virtual destructor needs an implementation](https://stackoverflow.com/questions/21109417/why-a-pure-virtual-destructor-needs-an-implementation), and in particular this
+    [answer](https://stackoverflow.com/a/21110040):
+    ```c++
+    struct Base
+    {
+       virtual ~Base()    = 0;  // invoked no matter what
+       virtual void foo() = 0;  // only invoked if `Base::foo()` is called
+    };
+
+    Base::~Base() {}
+    /* void Base::foo() {} */
+
+    struct Derived : Base
+    {
+       virtual void foo() { /* Base::foo(); */ }
+    };
+
+    int main()
+    {
+        std::unique_ptr<Base> ptr(new Derived());
+    }
+    ```
 
 - Networking
   - Server: `socket`, `bind`, `listen`, `accept` or `select`/`poll`,
