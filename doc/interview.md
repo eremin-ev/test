@@ -331,7 +331,7 @@ Also
 
 - Compiling steps: `.cc/cpp` -> `.ii` -> `.s` -> `.o` -> `a.out`
 
-    ```shell
+    ```console
     $ gcc helloworld.c
     ```
 
@@ -349,9 +349,46 @@ Also
 
 - What's going on?
 
-    ```shell
+    ```console
     (echo hello; echo world) > output.txt
     ```
+
+  To quote an excellent teaching operating system textbook [1]:
+
+    > Now it should be clear why it is helpful that fork and exec are
+    > separate calls: between the two, the shell has a chance to redirect
+    > the child’s I/O without disturbing the I/O setup of the main shell.
+    > One could instead imagine a hypothetical combined forkexec system
+    > call, but the options for doing I/O redirection with such a call
+    > seem awkward. The shell could modify its own I/O setup before
+    > calling forkexec (and then un-do those modifications); or forkexec
+    > could take instructions for I/O redirection as arguments; or (least
+    > attractively) every program like cat could be taught to do its own
+    > I/O redirection.
+    >
+    > Although fork copies the file descriptor table, each underlying
+    > file offset is shared between parent and child. Consider this
+    > example:
+    >
+    >     ```c
+    >     if(fork() == 0) {
+    >       write(1, "hello ", 6);
+    >       exit(0);
+    >     } else {
+    >       wait(0);
+    >       write(1, "world\n", 6);
+    >     }
+    >     ```
+    >
+    > At the end of this fragment, the file attached to file descriptor 1
+    > will contain the data hello world.  The write in the parent (which,
+    > thanks to wait, runs only after the child is done) picks up where
+    > the child’s write left off. This behavior helps produce sequential
+    > output from sequences of shell commands, like `(echo hello; echo
+    > world) > output.txt`.
+
+    [1] [xv6: a simple, Unix-like teaching operating system](https://pdos.csail.mit.edu/6.S081/2023/xv6/book-riscv-rev3.pdf)<br/>
+    Russ Cox, Frans Kaashoek, Robert Morris.  September 5, 2022
 
 - Relocatable vs. Position-Independent Code (See
   ["Relocatable vs. Position-Independent Code"](http://davidad.github.io/blog/2014/02/19/relocatable-vs-position-independent-code-or/)
@@ -401,7 +438,7 @@ Also
         return new_root;
     }
     ```
-    Note: $`b`$ subtree may consist of nodes like $`b_i = \{3+i/(i+1)\}`$.
+    Note: $b$ subtree may consist of nodes like $b_i = \{3+i/(i+1)\}$.
     - Right rotation
     ```
                 7
@@ -919,21 +956,40 @@ Also
   - C libc (fopen/getline/fclose)
   - C++ STL
   - C++ Qt
+
 - `select` vs `poll` vs `epoll` (See
   ["Select v.s. poll v.s. epoll"](https://hechao.li/2022/01/04/select-vs-poll-vs-epoll/) [1])
+
 - Who is the owner of the a `/tmp/sda-uuid.txt` file and why?
-    ```
+
+    ```console
     [eremin@home-desktop ~]$ id
     uid=1000(eremin) gid=100(users) groups=100(users)
+
     [eremin@home-desktop ~]$ sudo blkid /dev/sda > /tmp/sda-uuid.txt
     ```
 
 - `checkLoginTime`
+
     ```
     // "00:00-01:00"
     static bool checkLoginTime(const std::string &sched_time)
     {
     }
+    ```
+
+## Converting this document
+
+- To PDF:
+
+    ```console
+    [eremin@home-desktop]$ pandoc -t latex -o doc/interview.pdf -V fontenc=T2A doc/interview.md
+    ```
+
+- To HTML:
+
+    ```console
+    [eremin@home-desktop]$ pandoc -o doc/interview.html doc/interview.md
     ```
 
 ## References
