@@ -142,8 +142,7 @@ Also
 - мьютекс, семафоры. Pthread. Shared memory, mqueue
 - Conditional variables, `std::condition_variable`
 - producer/consumer
-- text, bss (Block Started by Symbol on IBM 7090 assembly), data, rodata
-- How `.text`, `.data`, `.rodata`, `.bss` are related to runtime memory mappings?
+
 - i2c vs spi vs can bus
 - how unix signals are delivered
 - how qt signals are delivered ?
@@ -166,21 +165,24 @@ Also
 
 - rpm: `Requires` vs `BuildRequires`, `Conflicts` vs `Obsoletes`, what is `%check` for?
 - C function prototype accepting an argument of any type
+
     ```c
     void foo(const void *key, size_t key_size);
     ```
+
 - How this compiles, links and runs?
 
     ```c
     int main;
     ```
 
-    ```
+    ```c
     static int main()
     {
         return 0;
     }
     ```
+
 - Linker and symbol visibility: `static` function vs anonymous `namespace`
 
     ```c++
@@ -194,7 +196,9 @@ Also
 
     static int baz() {...}
     ```
+
 - Where semicolon is optional?
+
     ```c++
     struct A {
         A() {};
@@ -208,16 +212,21 @@ Also
     };
     ```
 
-    See also:<br>
+    See also:
+
     - [Optional semicolon in C++](https://stackoverflow.com/questions/11376025/optional-semicolon-in-c)
 
 - What's difference between `std::array` vs `std::vector` (Also,
   heap memory allocation vs Stack memory allocation)
 
 - ABI vs API compatibility
+
     - API
+
         - Requires changing the code
+
     - ABI
+
         - How parameters are passed to functions (registers/stack)
         - Who cleans parameters from the stack (caller/callee)
         - Where the return value is placed for return
@@ -257,6 +266,7 @@ Also
     - [Pimpl idiom vs Pure virtual class interface](https://stackoverflow.com/questions/825018/pimpl-idiom-vs-pure-virtual-class-interface)
 
 - Programming taste
+
     - Poor
 
         ```c
@@ -296,7 +306,9 @@ Also
         ```
 
     - Why `if`-s are bad?
+
         - Branch prediction vs data prefetching
+
 - Сложить два числа в двоичной записи: 1011010101 + 101010001101 = ?
 - What is negative value of `a` in a 8-bit machine?
 
@@ -315,11 +327,14 @@ Also
     // v3: let the compiler do the work
     int8_t c3 = -a;
     ```
+
 - Что значит «быстрая» сортировка (quick sort, Hoare's sort), что делает её быстрой?
   - Как бы вы реализовали параллельную быструю сортировку (в смысле использования
     нескольких ядер ЦП для сокращения длит. выполнения)?
   - 503 087 512 061 908 170 897 275 653 426 154 509 612 677 765 703
+
 - Что значит vdso?
+
 - Associativity:
 
     ```c++
@@ -336,11 +351,28 @@ Also
     ```
 
 - Why TLB cache was introduced in the modern CPUs, what task does it solve?
+
     ```
     Process A:   0x1000  <- 'a'  (store from a register)
     Process B:   0x1000  <- 'b'  (store from a register)
     Process C:   0x1000  ->  c   (load into a register)
     ```
+
+- ELF: What are `.text`, `.bss` (Block Started by Symbol on IBM 7090 assembly),
+  `.data`, `.rodata` segments?
+
+    - [Where did the text segment get its name?](https://stackoverflow.com/questions/1282506/where-did-the-text-segment-get-its-name)
+
+    ```console
+    [eremin@home-desktop]$ size /bin/size
+       text    data     bss     dec     hex filename
+      15897    1320     152   17369    43d9 /bin/size
+    ```
+
+- ELF: How `.text`, `.data`, `.rodata`, `.bss` are related to runtime memory mappings?
+
+- ELF: Segment vs Section
+
 - What for `addr` hint is used in `mmap`?
 - What problem solves the buddy allocator?
 
@@ -390,9 +422,10 @@ Also
     [1] [xv6: a simple, Unix-like teaching operating system](https://pdos.csail.mit.edu/6.S081/2023/xv6/book-riscv-rev3.pdf)<br/>
     Russ Cox, Frans Kaashoek, Robert Morris.  September 5, 2022
 
-- Relocatable vs. Position-Independent Code (See
-  ["Relocatable vs. Position-Independent Code"](http://davidad.github.io/blog/2014/02/19/relocatable-vs-position-independent-code-or/)
-  blog post [5] for some details)
+- Relocatable vs. Position-Independent Code
+
+    - [Relocatable vs. Position-Independent Code (or, Virtual Memory isn't Just For Swap)](http://davidad.github.io/blog/2014/02/19/relocatable-vs-position-independent-code-or/)
+
 - What is the Difference Between Object File and Executable File, and Shared Object, Static Archive?
 - Семантическое версионирование библиотек (`so-name`)
 - JTAG-debugger preloader, lk, uBoot, Linux kernel
@@ -1006,9 +1039,6 @@ Also
  1. C++ FAQ LITE — Frequently Asked Questions  
     Marshall Cline, <cline@parashift.com>  
     http://www.dietmar-kuehl.de/mirror/c++-faq/index.html
-
- 1. Relocatable vs. Position-Independent Code (or, Virtual Memory isn't Just For Swap)  
-    http://davidad.github.io/blog/2014/02/19/relocatable-vs-position-independent-code-or/
 
  1. pdos.csail.mit.edu: 6.1810: Operating System Engineering<br>
     https://pdos.csail.mit.edu/6.S081/2023/schedule.html
