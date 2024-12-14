@@ -78,6 +78,8 @@ moc_*.cc
 /test_ref
 /test_ret_local
 /test_ret_no_value
+/test_search_by_two_keys
+/test_search_by_two_keys_simple
 /test_second_largest
 /test_setter
 /test_sizeof

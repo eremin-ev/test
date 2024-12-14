@@ -6,7 +6,8 @@ DBG = -O0 -g
 #DBG ?= -O2 -g
 override CFLAGS += $(WALL) $(WERROR) $(DBG) -I$(src)/lib
 # -I$(PWD)
-override CXXFLAGS += $(WALL) $(WERROR) $(DBG) -std=c++17 -fPIC -I$(src)
+#  -fPIC
+override CXXFLAGS += $(WALL) $(WERROR) $(DBG) -std=c++11 -I$(src)
 LDLIBS = -lm
 
 bin =	test_actions \
@@ -81,6 +82,8 @@ bin =	test_actions \
 	test_ret_local \
 	test_ret_no_value \
 	test_sizeof \
+	test_search_by_two_keys \
+	test_search_by_two_keys_simple \
 	test_second_largest \
 	test_setter \
 	test_slicing \
@@ -168,6 +171,8 @@ $(dm): CXXFLAGS += $(shell pkg-config --cflags devmapper)
 $(dm): LDLIBS += $(shell pkg-config --libs devmapper)
 
 test_egl_xcb: LDLIBS += $(shell pkg-config --libs xcb gl egl)
+
+test_search_by_two_keys: CXXFLAGS += -std=c++14
 
 tags:
 	ctags -R .
