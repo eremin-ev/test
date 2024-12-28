@@ -65,6 +65,7 @@ bin =	test_actions \
 	test_mmap_chunks \
 	test_negative_int \
 	test_op \
+	test_optout \
 	test_page \
 	test_pam \
 	test_pam_spawn \
