@@ -36,6 +36,7 @@ bin =	test_actions \
 	test_ftempl \
 	test_func \
 	test_functor \
+	test_gcd \
 	test_get_seats \
 	test_getpwnam \
 	test_good_taste \
