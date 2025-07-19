@@ -90,6 +90,7 @@
  *
  */
 
+#include <deque>
 #include <iostream>
 #include <vector>
 
@@ -162,35 +163,124 @@ public:
         }*/
     }
 
+    std::vector<int> bfs_path_to_parent(const std::vector<int> &parent,
+                                        int dst_idx,
+                                        int src_idx)
+    {
+        std::vector<int> path;
+
+        int idx = dst_idx;
+
+        while (1) {
+            path.push_back(idx);
+            if (idx == src_idx) {
+                return path;
+            }
+
+            if (idx == 0) {
+                return std::vector<int>();
+            }
+
+            idx = parent[idx];
+        }
+    }
+
+    /*
+     * Breadth First Search
+     *
+     *   Init: Queue the source node and mark it as visited
+     *
+     *   1. If the queue is empty, quit
+     *   2. If not, take a next node from the queue
+     *   3. Add all neighbours of this node to the queue
+     *   4. Mark them as visited
+     *   5. Go to step 1
+     */
+    std::vector<int> bfs(const std::vector<std::vector<int>> &graph,
+                         int src_idx,
+                         int dst_idx)
+    {
+        if (!graph.size()) {
+            return std::vector<int>();
+        }
+
+        std::vector<bool> visited(graph.size());
+        std::vector<int> parent(graph.size());
+        std::deque<int> queue;
+
+        queue.push_back(src_idx);
+        visited[src_idx] = true;
+
+        while (!queue.empty()) {
+            int idx = queue.front();
+            queue.pop_front();
+            std::cout << __func__ << " " << idx << '\n';
+
+            for (const auto &n : graph[idx]) {
+                if (!visited[n]) {
+                    std::cout << __func__ << " add " << n << " to the queue" << '\n';
+                    queue.push_back(n);
+                    visited[n] = true;
+                    parent[n] = idx;
+                }
+            }
+
+            if (idx == dst_idx) {
+                return bfs_path_to_parent(parent, dst_idx, src_idx);
+            }
+
+            if (debug) {
+                std::cout << __func__ << "   visited " << ": " << show(visited) << '\n';
+                std::cout << __func__ << "   queue for " << idx << ": " << show(queue) << '\n';
+            }
+        }
+    }
+
     std::vector<std::vector<int>>
     dfs_from_to(const std::vector<std::vector<int>> &graph, int src, int dst)
     {
+        std::cout << __func__ << " size " << graph.size() << " " << src << " " << dst << '\n';
+
         if (!graph.size()) {
             return std::vector<std::vector<int>>();
         }
 
+        if (graph.size() == 1 && graph[0].size() == 0) {
+            //std::vector<int> v;
+            return { {}, };
+        }
+
         std::vector<bool> visited(graph.size());
-        std::vector<Vertex> stack;
+        std::vector<int> stackv;
+        std::vector<int> stackn;
         std::vector<int> path;
 
-        stack.push_back({src, 0});
+        // Push the source and set its neighbour index to 0
+        stackv.push_back(src);
+        // Push neighbour idx == 0
+        stackn.push_back(0);
         path.push_back(src);
 
         if (debug) {
             std::cout << __func__ << "   visited " << ": " << show(visited) << '\n';
-            std::cout << __func__ << "   stack " << ": " << show(stack) << '\n';
+            std::cout << __func__ << "   stackv " << ": " << show(stackv) << '\n';
+            std::cout << __func__ << "   stackn " << ": " << show(stackn) << '\n';
+            std::cout << __func__ << "   path " << ": " << show(path) << '\n';
+            std::cout << __func__ << "   path == stackv " << (path == stackv ? "yes" : "no") << '\n';
         }
 
         std::vector<std::vector<int>> paths;
-        while (!stack.empty()) {
-            Vertex &v = stack.back();
+        while (!stackv.empty()) {
+            //Vertex &v = stack.back();
+            int &current_idx = stackv.back();
+            int &neighbour_idx = stackn.back();
 
             //std::cout << __func__ << " " << v.idx << '\n';
 
-            // if found destination or no more neighbours to eplore
-            if (v.idx == dst || v.neighbour == (int)graph[v.idx].size()) {
+            // if found destination or no more neighbours to explore
+            if (current_idx == dst || neighbour_idx == (int)graph[current_idx].size()) {
                 // yes, once again same if...
-                if (v.idx == dst) {
+                if (current_idx == dst) {
                     if (debug) {
                         std::cout << __func__ << " found path from " << src
                                               << " to " << dst
@@ -200,27 +290,34 @@ public:
                     paths.push_back(path);
                 }
 
-                visited[v.idx] = false;
+                visited[current_idx] = false;
                 if (path.size() == 0) {
                     std::cout << __func__ << " attempt to pop from an empty path\n";
                     abort();
                 }
                 path.pop_back();
-                stack.pop_back();
+                stackv.pop_back();
+                stackn.pop_back();
             } else {
-                int next_neighbour = graph[v.idx][v.neighbour];
-                ++v.neighbour;
+                int next_neighbour = graph[current_idx][neighbour_idx];
+                // increments neighbour_idx which points to the last element of the stackn
+                ++neighbour_idx;
                 if (!visited[next_neighbour]) {
                     visited[next_neighbour] = true;
-                    stack.push_back({next_neighbour, 0});
+                    stackv.push_back(next_neighbour);
+                    // push next neighbour_idx == 0
+                    stackn.push_back(0);
                     path.push_back(next_neighbour);
                 }
             }
 
             if (debug) {
+                std::cout << __func__ << " ---" << '\n';
                 std::cout << __func__ << "   visited " << ": " << show(visited) << '\n';
-                std::cout << __func__ << "   stack for " << v.idx << ": " << show(stack) << '\n';
-                std::cout << __func__ << "   path for " << v.idx << ": " << show(path) << '\n';
+                std::cout << __func__ << "   stackv for " << current_idx << ": " << show(stackv) << '\n';
+                std::cout << __func__ << "   stackn for " << current_idx << ": " << show(stackn) << '\n';
+                std::cout << __func__ << "   path for " << current_idx << ": " << show(path) << '\n';
+                std::cout << __func__ << "   path == stackv " << (path == stackv ? "yes" : "no") << '\n';
             }
         }
 
@@ -228,9 +325,10 @@ public:
     }
 
 private:
+#if 0
     struct Vertex {
-        int idx;
-        int neighbour;  // neighbour index
+        int current_idx;    // current vertex index
+        int neighbour_idx;  // neighbour index
     };
 
     std::string show(const std::vector<Vertex> &v) const
@@ -239,9 +337,9 @@ private:
         o += '(';
         for (const auto &e : v) {
             o += '{';
-            o += std::to_string(e.idx);
+            o += std::to_string(e.current_idx);
             o += ',';
-            o += std::to_string(e.neighbour);
+            o += std::to_string(e.neighbour_idx);
             o += '}';
             o += ',';
         }
@@ -249,6 +347,7 @@ private:
 
         return o;
     }
+#endif
 
     std::string show(const std::vector<bool> &v) const
     {
@@ -266,37 +365,66 @@ private:
 
         return o;
     }
+
+    std::string show(const std::deque<int> &q) const
+    {
+        std::string o;
+        o += '(';
+        for (const auto &e : q) {
+            o += std::to_string(e);
+            o += ',';
+        }
+        o += ')';
+
+        return o;
+    }
+
     //std::vector<int> current_path;
     //std::vector<std::vector<int>> simple_paths;
-    bool debug = 0;
+    bool debug = 10;
 };
 
 namespace {
 
 static int test_dfs()
 {
-    const struct {
+    const struct Case {
         //using namespace std;
         std::vector<std::vector<int>> g;
         std::vector<std::vector<int>> paths;
     } cases[] = {
-        {
-            .g = { {}, },
-            .paths = { {}, },
-        },
+        //{
+        //    .g = { {}, },
+        //    .paths = { {}, },
+        //},
+        //{
+        //    .g = { {0,}, },
+        //    .paths = { {0,}, },
+        //},
+        //           0    1    2    3
         //{ .g = {{1,2}, {3}, {3}, {}, }, },
+        //
+        //             0    1     2    3   4
         //{ .g = {{1,2,3}, {}, {3,4}, {}, {}, }, },
+        //
         //           0        1    2   3   4
         //{ .g = {{1,3,4}, {2,3,4}, {3}, {}, {}, }, },
+        //
         //           0        1    2    3   4
         //{ .g = {{1,3,4}, {2,3,4}, {3}, {4}, {}, }, },
+        //
+        //
         //{ .g = {{1,2}, {2,3}, {3,4}, {4}, {3}, }, },
+        //
         //           0    1    2    3    4     5    6     7    8     9   10
         //{ .g = {{1,2,3}, {4}, {6}, {8}, {5}, {10}, {7}, {10}, {9}, {10}, {} }, },
-        //       0        1    2    3    4     5    6    7   8
+        //
+        //         0        1    2    3    4     5    6    7   8
         //{ .g = {{1}, {2,3,4}, {5}, {6}, {7},  {8}, {8}, {}, {}, }, },
-        // 2d mesh  0       1    2      3      4     5    6    7    8
-        {   .g = {
+        {
+            // 2d mesh
+            .g = {
+                // 0      1    2      3      4     5    6    7    8
                 {1,3}, {2,4}, {5}, {4,6}, {5,7},  {8}, {7}, {8}, {},
             },
             .paths = {
@@ -313,17 +441,30 @@ static int test_dfs()
     int errors = 0;
     Solution s;
 
-    for (const auto &c : cases) {
-        //s.all_paths(c.g);
-        //s.dfs(c.g);
+    const auto test_dfs_from_to = [&s](const Case &c) {
         std::vector<std::vector<int>> paths = s.dfs_from_to(c.g, 0, c.g.size() - 1);
-        std::cout << "paths:\n";
+        std::cout << "paths: " << paths.size() << '\n';
+        //for (const auto &p : paths) {
         for (const auto &p : paths) {
             std::cout << '\t' << s.show(p) << '\n';
         }
         int r = paths == c.paths;
         std::cout << (r ? "ok" : "failed") << '\n';
-        errors += !r;
+
+        return r;
+    };
+
+    const auto test_bfs = [&s](const Case &c) {
+        const std::vector<int> &p = s.bfs(c.g, 0, c.g.size() - 1);
+        std::cout << "path " << s.show(p) << '\n';
+        return 0;
+    };
+
+    for (const auto &c : cases) {
+        //s.all_paths(c.g);
+        //s.dfs(c.g);
+        errors += test_bfs(c);
+        //errors += !test_dfs_from_to(c);
     }
 
     return errors;
