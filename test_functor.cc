@@ -20,22 +20,22 @@ static std::string vec_dump(const std::vector<int> &v)
     return output;
 }
 
-struct Inc {
-private:
-    int m_addend;
-public:
-    Inc(int a)
-    : m_addend(a)
-    {}
-
-    int operator()(int value) const
-    {
-        return value + m_addend;
-    }
-};
-
 static void test_inc()
 {
+    struct Inc {
+    private:
+        int m_addend;
+    public:
+        Inc(int a)
+        : m_addend(a)
+        {}
+
+        int operator()(int value) const
+        {
+            return value + m_addend;
+        }
+    };
+
     int a[] = { 1, 2, 3, 4, 5 };
     int n = sizeof(a) / sizeof(a[0]);
     int to_add = 7;
@@ -70,20 +70,20 @@ static void test_cmp2()
     printf("%s output: %s\n", __func__, vec_dump(vec).c_str());
 }
 
-struct Cmp {
-    bool operator()(int a, int b)
-    {
-        return a < b;
-    }
-
-    int operator()(int a)
-    {
-        return -a;
-    }
-};
-
 static void test_cmp3()
 {
+    struct Cmp {
+        bool operator()(int a, int b)
+        {
+            return a < b;
+        }
+
+        int operator()(int a)
+        {
+            return -a;
+        }
+    };
+
     std::vector<int> vec = { 503, 87, 512, 61, 908, 170, 897, 275, 653, 426, 154, 509, 612, 677, 765, 703 };
     printf("%s input: %s\n", __func__, vec_dump(vec).c_str());
     Cmp cmp;
