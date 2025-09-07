@@ -49,6 +49,7 @@ bin =	test_actions \
 	test_integer_overflow \
 	test_is_constexpr \
 	test_iter \
+	test_key_manager \
 	test_keyval \
 	test_klengthpref \
 	test_lambda \
@@ -174,7 +175,7 @@ $(dm): LDLIBS += $(shell pkg-config --libs devmapper)
 
 test_egl_xcb: LDLIBS += $(shell pkg-config --libs xcb gl egl)
 
-test_search_by_two_keys: CXXFLAGS += -std=c++14
+test_search_by_two_keys test_key_manager: CXXFLAGS += -std=c++14
 
 tags:
 	ctags -R .
