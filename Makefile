@@ -96,6 +96,7 @@ bin =	test_actions \
 	test_subarray_sum \
 	test_substr_cnt \
 	test_suid \
+	test_task_scheduler \
 	test_task_scheduler_abc \
 	test_triv \
 	test_uls \
@@ -176,6 +177,10 @@ $(dm): LDLIBS += $(shell pkg-config --libs devmapper)
 test_egl_xcb: LDLIBS += $(shell pkg-config --libs xcb gl egl)
 
 test_search_by_two_keys test_key_manager: CXXFLAGS += -std=c++14
+
+test_task_scheduler: task-scheduler.o
+
+task-scheduler.o: lib/task-scheduler.cc lib/task-scheduler.h
 
 tags:
 	ctags -R .
