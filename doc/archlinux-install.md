@@ -43,6 +43,16 @@
    7.3. [Reboot the Target Machine](#73-reboot-the-target-machine)<br/>
    7.4. [Verify Boot](#74-verify-boot)<br/>
    7.5. [Post-Installation (Optional)](#75-post-installation-optional)<br/>
+8. [Inference](#8-inference)<br/>
+   8.1. [Donato Capitella's toolboxes](#81-donato-capitellas-toolboxes)<br/>
+   8.2. [strix-llama.cpp](#82-strix-llamacpp)<br/>
+   8.3. [halogen-flash-server (no open source)](#83-halogen-flash-server-no-open-source)<br/>
+   8.4. [Strix Halo llama-cpp production snapshot](#84-strix-halo-llama-cpp-production-snapshot)<br/>
+   8.5. [Qwen 3.8 27B `ROCmFP4_FAST` on AMD Strix Halo (Ryzen AI Max+ 395)](#85-qwen-38-27b-rocmfp4_fast-on-amd-strix-halo-ryzen-ai-max-395)<br/>
+   8.6. [Strix Halo × Qwen3.8](#86-strix-halo--qwen38)<br/>
+   8.7. [Strix Halo Setup](#87-strix-halo-setup)<br/>
+   8.8. [Unsloth Qwen3.8-Flash-Next](#88-unsloth-qwen38-flash-next)<br/>
+   8.9. [gufo](#89-gufo)<br/>
 
 ---
 
@@ -1202,6 +1212,152 @@ expect).  Use the `poke` mode to recover from this unexpected `setterm` behavior
 ```bash
 [root@ms-s1-max ~]# TERM=linux setterm --blank poke </dev/tty1
 ```
+
+# 8. Inference
+
+## 8.1 Donato Capitella's toolboxes
+
+  - Github: AMD Strix Halo Llama.cpp Toolboxes<br/>
+    https://github.com/kyuz0/amd-strix-halo-toolboxes/tree/main: 
+
+  - hub.docker.com: kyuz0/amd-strix-halo-toolboxes<br/>
+    https://hub.docker.com/r/kyuz0/amd-strix-halo-toolboxes
+
+  - Strix Halo AI Toolboxes: Host Config<br/>
+    https://strix-halo-toolboxes.com/#config
+
+## 8.2 strix-llama.cpp
+
+  - https://github.com/halo-box/strix-llama.cpp: llama.cpp for AMD Strix Halo
+
+    ~ 30 t/s decode, 800 t/s prefill
+
+## 8.3 halogen-flash-server (no open source)
+
+  - https://github.com/peonist-ai/halogen-flash-server: halogen™ is the fastest 
+    way to run Qwen3.8-Flash-Next on AMD Strix Halo, and it does not get there 
+    by spending fewer bits.
+
+    ~ 50 t/s decode and 1200 t/s prefill.
+
+  - https://huggingface.co/peonist-ai/halogen-qwen3.8-flash-next
+
+  - https://huggingface.co/peonist-ai/halogen-qwen3.8-flash-next/tree/main
+
+    ```
+        qwen38-flash-next-w4b.overlay.hgn: draft heads (?)
+
+        qwen38-flash-next-mtp.hgn: MTP
+    ```
+
+## 8.4 Strix Halo llama-cpp production snapshot
+
+  - https://github.com/myhacsint/llama.cpp/tree/production/strix-halo-qwen4exp-b10685
+
+    ~ 60t/s decode and 600t/s prefill
+
+## 8.5 Qwen 3.8 27B `ROCmFP4_FAST` on AMD Strix Halo (Ryzen AI Max+ 395)
+
+  - https://github.com/julianmb/q38rocm
+
+    Dedicated Model Project: This repository is the dedicated
+    deep-dive project for Qwen 3.8 27B on AMD Strix Halo.
+
+## 8.6 Strix Halo × Qwen3.8
+
+  - https://github.com/pwilkin/strix-halo: Strix Halo × Qwen3.8
+
+    The project installs a pinned, reproducible Qwen3.8-27B stack for AMD Strix Halo (gfx1151)
+
+## 8.7 Strix Halo Setup
+
+  - Setup — the PX13 journey<br/>
+    https://github.com/mritzco/strixhalo-setup
+
+## 8.8 Unsloth Qwen3.8-Flash-Next
+
+  - https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF
+
+    4-bit: UD-IQ4_XS    93.7 GB     MTP Q4_K_M 2.79 GB     MTP Q4_K_M 1.91 GB
+
+## 8.9 gufo
+
+- Gufo: the Strix Halo inference engine<br/>
+  https://github.com/gufo-org/gufo
+
+  Download `UD-Q4_K_XL` quant of
+  [unsloth/Qwen3.8-Flash-Next-GGUF](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/tree/main):
+
+  ```bash
+  $ hf download --local-dir models/qwen3.8-flash-next/ unsloth/Qwen3.8-Flash-Next-GGUF \
+      --revision 38bb39ee97821de2c9009abb7e93950eec396e66 \
+      'MTP/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf' \
+      'mmproj-BF16.gguf'
+
+  $ hf download --local-dir models/qwen3.8-flash-next/ unsloth/Qwen3.8-Flash-Next-GGUF \
+      --revision 38bb39ee97821de2c9009abb7e93950eec396e66 --include 'UD-Q4_K_XL/*'
+  ```
+
+  Download `UD-Q4_K_XL` and `UD-Q8_K_XL` quants of
+  [unsloth/Qwen3.8-27B-GGUF](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/tree/main)
+  with `Q4_K_M` quant of
+  [z-lab/Qwen3.8-27B-DFlash2-GGUF](https://huggingface.co/z-lab/Qwen3.8-27B-DFlash2-GGUF)
+  (a draft model which runs inside a speculative decoding server and drafts tokens
+  for the target model to verify):
+
+  ```bash
+  $ hf download --local-dir models/qwen3.8-27b/ unsloth/Qwen3.8-27B-GGUF \
+      Qwen3.8-27B-UD-Q4_K_XL.gguf \
+      mmproj-BF16.gguf
+
+  $ hf download --local-dir models/qwen3.8-27b/ unsloth/Qwen3.8-27B-GGUF \
+      Qwen3.8-27B-UD-Q8_K_XL.gguf
+
+  $ hf download --local-dir models/qwen3.8-27b/ z-lab/Qwen3.8-27B-DFlash2-GGUF \
+      Qwen3.8-27B-DFlash2-Q4_K_M.gguf
+  ```
+
+  ```bash
+  $ sudo usermod -aG video,render <username>
+  ```
+
+  ```bash
+  $ podman pull ghcr.io/gufo-org/toolboxes/gufo-runtime:latest
+
+  $ podman run --rm --userns=keep-id:uid=1000,gid=100 --group-add keep-groups \
+               --device /dev/kfd --device /dev/dri --ulimit memlock=-1 \
+               --publish 127.0.0.1:18080:18080 \
+               --log-driver=none \
+               -v ~/models:/models:ro ghcr.io/gufo-org/toolboxes/gufo-runtime:latest \
+               gufo serve -v --host 0.0.0.0 --port 18080 llm \
+                          --model /models/qwen3.8-27b/Qwen3.8-27B-UD-Q8_K_XL.gguf \
+                          --speculative dflash2 \
+                          --dflash-model /models/qwen3.8-27b/Qwen3.8-27B-DFlash2-Q4_K_M.gguf
+  ```
+
+  On the client side (desktop/laptop):
+
+  ```bash
+  $ ssh -N -L 18080:127.0.0.1:18080 <username>@<target-IP>
+
+  $ curl http://localhost:18080/v1/chat/completions -H "Content-Type: application/json" -d '{
+    "model": "Qwen3.8-27B",
+    "messages": [{"role": "user", "content": "Say something"}]
+  }'
+  ```
+
+  Install the pi coding agent requirements:
+
+  ```bash
+  $ sudo pacman -S fd ripgrep socat
+  ```
+
+  Install the pi coding agent and a simple sandbox extension (bwrap-based):
+
+  ```bash
+  $ sudo npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+  $ pi install npm:pi-sandbox
+  ```
 
 ---
 <small>*Arch Linux is a trademark of the Arch Linux Project.
