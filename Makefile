@@ -196,5 +196,6 @@ clean:
 	$(MAKE) -C modelview clean
 	$(MAKE) -C pam clean
 	$(MAKE) -C qdbus clean
+	$(MAKE) -C sim2d clean
 	$(MAKE) -C udisks2 clean
 	$(MAKE) -C ulock clean
