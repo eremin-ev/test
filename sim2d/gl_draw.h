@@ -2,13 +2,14 @@
  * This source code is licensed under the GNU General Public License,
  * Version 2.  See the file COPYING for more details.
  *
- * gl_draw.h - OpenGL ES 2 renderer: one indexed draw call for all balls.
+ * gl_draw.h - OpenGL ES 2 renderer: one indexed draw call for all particles.
  *
- * Balls are screen-space quads; the fragment shader turns each quad into an
- * anti-aliased disc with a signed distance function (no textures, no MSAA
+ * Particles are screen-space quads; the fragment shader turns each quad into
+ * an anti-aliased disc with a signed distance function (no textures, no MSAA
  * required). A pair of antipodal "billiard dots" (procedural, darkened in
- * the FS) makes the ball's rotation visible. A second tiny program draws
- * flat lines (drag preview, grid).
+ * the FS) makes a single-particle body's rotation visible - composite bodies
+ * are drawn without the marker. A second tiny program draws flat lines (drag
+ * preview, grid).
  */
 
 #ifndef GL_DRAW_H
@@ -28,12 +29,12 @@ typedef struct {
 
 typedef struct {
     GLuint prog_ball, prog_line;
-    GLint a_corner, a_center, a_radius, a_color, a_alpha, a_ang;
+    GLint a_corner, a_center, a_radius, a_color, a_alpha, a_ang, a_flat;
     GLint a_pos_line;
     GLint u_res_ball, u_res_line, u_color_line;
     GLuint vbo, ebo;
     int cap;
-    float *v; /* CPU staging buffer, 10 floats per vertex, 4 vertices per ball */
+    float *v; /* CPU staging buffer, 11 floats per vertex, 4 per particle */
 
     float *lines;   /* line staging buffer, 2 floats per vertex (drag, grid) */
     int line_cap;   /* vertices allocated */
@@ -46,7 +47,8 @@ typedef struct {
 int glr_init(Renderer *r, int cap);
 void glr_destroy(Renderer *r);
 int glr_enable_fbo(Renderer *r, int w, int h);
-/* show_grid != 0 draws the broad-phase neighbour grid (toggled with 'n'). */
+/* hover is a BODY index (-1 none); the whole body darkens.
+ * show_grid != 0 draws the broad-phase neighbour grid (toggled with 'n'). */
 void glr_draw(Renderer *r, const Sim *sim, int hover, const Drag *drag, int w,
               int h, int show_grid);
 int glr_dump_ppm(Renderer *r, const char *path); /* reads the current target */
