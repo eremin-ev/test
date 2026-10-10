@@ -3,7 +3,8 @@
  * Version 2.  See the file COPYING for more details.
  *
  * gl_draw.c - see gl_draw.h. Background is white; everything else is drawn
- * on top of it (balls as SDF discs, drag preview and neighbour grid as quads).
+ * on top of it (particles as SDF discs, drag preview and neighbour grid as
+ * quads). Bodies contribute one quad per particle, in particle order.
  *
  */
 
@@ -14,8 +15,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FLOATS_PER_VERTEX 10
-#define VERTS_PER_BALL 4
+#define FLOATS_PER_VERTEX 11
+#define VERTS_PER_PARTICLE 4
+
+/* PARTICLE_SKIN: a composite body's particles are drawn this much wider than
+ * they collide, so the hex interstices read as solid fill while the physics
+ * stays overlap-free. The geometric covering radius is 1/cos 30deg = 1.1547
+ * (a hole centre sits exactly 2r/sqrt(3) from three lattice points) - but that
+ * leaves zero margin, and the FS AA band starts 1 px INSIDE the rim, so at
+ * lattice radii of a few pixels the three covering discs do not quite reach
+ * opacity together and the packing shows as a honeycomb of light dots. 1.2 is
+ * measured clean at r >= 4 px; the cost is 0.2*r of visual overhang instead of
+ * 0.15*r, most visible at corners. Single-particle bodies are NOT skinned -
+ * they are discs already. */
+#define PARTICLE_SKIN 1.2f
 
 /* DOT_OFFSET: spin-marker dot centre in disc units (r = 1); defined inside
  * the shader source so GLSL can see it too. */
@@ -27,6 +40,7 @@ static const char *VS_BALL =
     "attribute vec3 a_color;\n"
     "attribute float a_alpha;\n"
     "attribute float a_ang;\n"
+    "attribute float a_flat;\n"
     "uniform vec2 u_res;\n"
     "varying vec2 v_disc;\n"
     "varying vec3 v_color;\n"
@@ -34,6 +48,7 @@ static const char *VS_BALL =
     "varying float v_aa;\n"
     "varying vec2 v_dot;\n"
     "varying float v_dot_on;\n"
+    "varying float v_flat;\n"
     "void main(void) {\n"
     "    vec2 p = a_center + a_corner * a_radius;\n"
     "    vec2 clip = (p / u_res) * 2.0 - 1.0;\n"
@@ -47,6 +62,7 @@ static const char *VS_BALL =
     "    float sa = sin(a_ang < 0.0 ? 0.0 : a_ang);\n"
     "    v_dot = vec2(ca, sa) * DOT_OFFSET;\n"
     "    v_dot_on = a_ang < 0.0 ? 0.0 : 1.0;\n" /* negative angle: no marker */
+    "    v_flat = a_flat;\n"
     "}\n";
 
 static const char *FS_BALL =
@@ -57,11 +73,15 @@ static const char *FS_BALL =
     "varying float v_aa;\n"
     "varying vec2 v_dot;\n"
     "varying float v_dot_on;\n"
+    "varying float v_flat;\n"
     "void main(void) {\n"
     "    float d = length(v_disc);\n"
     "    float a = v_alpha * (1.0 - smoothstep(1.0 - v_aa, 1.0 + v_aa, d));\n"
     "    if (a <= 0.002) discard;\n"
-    "    float shade = mix(0.70, 1.0, smoothstep(1.0, 0.40, d));\n"
+    /* the radial gradient is what makes a disc read as a ball; on a raft of
+     * particles the same gradient draws every particle as its own bubble, so
+     * composite bodies ask for flat fill and read as one solid shape */
+    "    float shade = mix(mix(0.70, 1.0, smoothstep(1.0, 0.40, d)), 1.0, v_flat);\n"
     "    vec3 col = v_color * shade;\n"
     /* antipodal spin markers: two dark dots on a rotating diameter */
     "    float dd = min(length(v_disc - v_dot), length(v_disc + v_dot));\n"
@@ -132,11 +152,12 @@ int glr_init(Renderer *r, int cap)
 {
     memset(r, 0, sizeof *r);
     r->cap = cap;
-    r->v = malloc((size_t)cap * VERTS_PER_BALL * FLOATS_PER_VERTEX * sizeof *r->v);
+    r->v = malloc((size_t)cap * VERTS_PER_PARTICLE * FLOATS_PER_VERTEX * sizeof *r->v);
     if (!r->v)
         return -1;
 
     r->prog_ball = link(VS_BALL, FS_BALL);
+    /* one quad per particle, not per body: capacity is in particles */
     r->prog_line = link(VS_LINE, FS_LINE);
     if (!r->prog_ball || !r->prog_line)
         return -1;
@@ -147,6 +168,7 @@ int glr_init(Renderer *r, int cap)
     r->a_color = glGetAttribLocation(r->prog_ball, "a_color");
     r->a_alpha = glGetAttribLocation(r->prog_ball, "a_alpha");
     r->a_ang = glGetAttribLocation(r->prog_ball, "a_ang");
+    r->a_flat = glGetAttribLocation(r->prog_ball, "a_flat");
     r->u_res_ball = glGetUniformLocation(r->prog_ball, "u_res");
 
     r->u_res_line = glGetUniformLocation(r->prog_line, "u_res");
@@ -156,7 +178,7 @@ int glr_init(Renderer *r, int cap)
     glGenBuffers(1, &r->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, r->vbo);
     glBufferData(GL_ARRAY_BUFFER,
-                 (GLsizeiptr)cap * VERTS_PER_BALL * FLOATS_PER_VERTEX * sizeof(float),
+                 (GLsizeiptr)cap * VERTS_PER_PARTICLE * FLOATS_PER_VERTEX * sizeof(float),
                  NULL, GL_DYNAMIC_DRAW);
 
     /* Static index buffer: 4 vertices per ball, 2 triangles per quad. */
@@ -166,7 +188,7 @@ int glr_init(Renderer *r, int cap)
         return -1;
     for (int i = 0; i < cap; i++)
         for (int k = 0; k < 6; k++)
-            idx[i * 6 + k] = (GLuint)(i * VERTS_PER_BALL + QUAD[k]);
+            idx[i * 6 + k] = (GLuint)(i * VERTS_PER_PARTICLE + QUAD[k]);
 
     glGenBuffers(1, &r->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, r->ebo);
@@ -228,14 +250,15 @@ int glr_enable_fbo(Renderer *r, int w, int h)
 
 /* ----------------------------------------------------------------- draw */
 
-/* alpha < 0 in `ang` disables the spin marker (used for the ghost ball). */
-static void push_ball(float **v, float x, float y, float r, float cr, float cg,
-                      float cb, float alpha, float ang)
+/* alpha < 0 in `ang` disables the spin marker (ghost preview, and every
+ * particle of a composite body). */
+static void push_particle(float **v, float x, float y, float r, float cr,
+                          float cg, float cb, float alpha, float ang, float flat)
 {
-    static const float cx[VERTS_PER_BALL] = { -1, 1, -1, 1 };
-    static const float cy[VERTS_PER_BALL] = { -1, -1, 1, 1 };
+    static const float cx[VERTS_PER_PARTICLE] = { -1, 1, -1, 1 };
+    static const float cy[VERTS_PER_PARTICLE] = { -1, -1, 1, 1 };
     float *p = *v;
-    for (int i = 0; i < VERTS_PER_BALL; i++) {
+    for (int i = 0; i < VERTS_PER_PARTICLE; i++) {
         p[0] = cx[i];
         p[1] = cy[i];
         p[2] = x;
@@ -246,6 +269,7 @@ static void push_ball(float **v, float x, float y, float r, float cr, float cg,
         p[7] = cb;
         p[8] = alpha;
         p[9] = ang;
+        p[10] = flat;
         p += FLOATS_PER_VERTEX;
     }
     *v = p;
@@ -366,32 +390,39 @@ void glr_draw(Renderer *r, const Sim *sim, int hover, const Drag *drag, int w,
     glViewport(0, 0, w, h);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    int count = sim->n;
-    if (drag && count < r->cap)
-        count++; /* one slot for the ghost ball */
-    if (count > r->cap)
-        count = r->cap;
+    int room = r->cap;
+    if (drag && sim->np < room)
+        room--; /* one slot for the ghost particle */
 
     float *v = r->v;
-    for (int i = 0; i < count; i++) {
-        if (i == sim->n) { /* ghost ball preview (dark: background is white) */
-            push_ball(&v, drag->x0, drag->y0, drag->gr, 0.15f, 0.15f, 0.15f,
-                      0.30f, -1.0f);
-            continue;
-        }
-        const Ball *b = &sim->b[i];
+    int nq = 0; /* quads queued */
+    for (int i = 0; i < sim->nb && nq < room; i++) {
+        const Body *b = &sim->body[i];
         float k = (i == hover) ? 0.65f : 1.0f; /* darken on white */
         float cr = b->cr * k, cg = b->cg * k, cb = b->cb * k;
         if (cr > 1) cr = 1;
         if (cg > 1) cg = 1;
         if (cb > 1) cb = 1;
-        push_ball(&v, b->x, b->y, b->r, cr, cg, cb, 1.0f, b->ang);
+        /* Keyed on pn, not on the shape tag: a coarse lattice can legitimately
+         * reduce a small box to a single particle, and then it IS a disc -
+         * marker on, no skin, radial shading. Negative ang means "no marker". */
+        int one = b->pn == 1;
+        float mark = one ? b->ang : -1.0f;
+        float skin = one ? 1.0f : PARTICLE_SKIN;
+        for (int q = b->p0; q < b->p0 + b->pn && nq < room; q++, nq++)
+            push_particle(&v, sim->p[q].x, sim->p[q].y, sim->p[q].r * skin, cr,
+                          cg, cb, 1.0f, mark, one ? 0.0f : 1.0f);
     }
+    if (drag && nq < r->cap)
+        /* ghost preview (dark: background is white) */
+        push_particle(&v, drag->x0, drag->y0, drag->gr, 0.15f, 0.15f, 0.15f,
+                      0.30f, -1.0f, 0.0f), nq++;
+    int count = nq;
 
     glUseProgram(r->prog_ball);
     glUniform2f(r->u_res_ball, (float)w, (float)h);
     glBindBuffer(GL_ARRAY_BUFFER, r->vbo);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)count * VERTS_PER_BALL *
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)count * VERTS_PER_PARTICLE *
                                        FLOATS_PER_VERTEX * sizeof(float),
                  r->v, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, r->ebo);
@@ -403,6 +434,7 @@ void glr_draw(Renderer *r, const Sim *sim, int hover, const Drag *drag, int w,
     glEnableVertexAttribArray((GLuint)r->a_color);
     glEnableVertexAttribArray((GLuint)r->a_alpha);
     glEnableVertexAttribArray((GLuint)r->a_ang);
+    glEnableVertexAttribArray((GLuint)r->a_flat);
     glVertexAttribPointer((GLuint)r->a_corner, 2, GL_FLOAT, GL_FALSE, stride,
                           (const void *)0);
     glVertexAttribPointer((GLuint)r->a_center, 2, GL_FLOAT, GL_FALSE, stride,
@@ -415,6 +447,8 @@ void glr_draw(Renderer *r, const Sim *sim, int hover, const Drag *drag, int w,
                           (const void *)(8 * sizeof(float)));
     glVertexAttribPointer((GLuint)r->a_ang, 1, GL_FLOAT, GL_FALSE, stride,
                           (const void *)(9 * sizeof(float)));
+    glVertexAttribPointer((GLuint)r->a_flat, 1, GL_FLOAT, GL_FALSE, stride,
+                          (const void *)(10 * sizeof(float)));
     glDrawElements(GL_TRIANGLES, count * 6, GL_UNSIGNED_INT, 0);
 
     if (show_grid)
