@@ -193,6 +193,7 @@ tags:
 clean:
 	rm -vf $(bin) *.i *.o *.s
 	$(MAKE) -C d_ptr clean
+	$(MAKE) -C imp2d clean
 	$(MAKE) -C modelview clean
 	$(MAKE) -C pam clean
 	$(MAKE) -C qdbus clean
