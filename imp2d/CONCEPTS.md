@@ -209,8 +209,13 @@ rotation-dependent effects (irrelevant for discs).
 | `Δt` | substep, `1/240` s | `PHYS_DT` |
 | `n` | contact unit normal, `i → j` | `nxx, nyy` |
 | `t = (−n_y, n_x)` | contact unit tangent | `tx, ty` |
-| `p` | contact point relative to a centre | `px, py` |
+| `p` (lever arm) | contact point relative to a centre | `px, py` |
 | `j_n, j_t` | normal / tangential impulse (momentum units) | `jimp`, `jt` |
+
+> Notation caveat: `docs/phys.tex` follows the textbook usage instead, so there
+> `r` is the lever arm (`r_i = r_i·n`, torque `τ = r × J`, `I·Δω = τ`) and `p`
+> is reserved for linear momentum `m·v` (capital `P` for a whole system). The
+> *code* is what both texts describe, and it calls the lever arm `px, py`.
 
 ### Geometry of a pair contact
 
@@ -241,8 +246,8 @@ anywhere in `sim.c` (a hard rule of the module — trig lives on the shader side
 
 > The complete version of this derivation — from `m·dv/dt = ΣF` through the
 > impulsive limit, with figures of the contact geometry and of the before/after
-> velocities — is in **`tmp/phys.tex`** (`pdflatex tmp/phys.tex`). What follows
-> is the summary of it.
+> velocities — is in **`docs/phys.tex`** (`pdflatex phys.tex` twice, or `make`,
+> in `docs/`). What follows is the summary of it.
 
 Relative normal velocity and normal effective mass:
 
@@ -896,11 +901,12 @@ avoid `qsort` comparator plumbing at n = 2000).
   restart velocity → iterated impulses, with restitution gating and rolling
   resistance. The two projects exist to bracket the same scene from both sides;
   the numbers to compare are in both `AGENTS.md` files.
-* **`tmp/phys.tex`** — a standalone LaTeX/TikZ write-up of the two-disc impulse
-  derivation (`pdflatex phys.tex` in that directory): Newton's law → impulsive
-  limit → restitution → momentum/energy bookkeeping → the tangential (spin)
-  impulse, with a contact-geometry figure and a before/after velocity figure, and
-  an equation-to-source-line table for `sim.c`.
+* **`docs/phys.tex`** — a standalone LaTeX/TikZ write-up of the two-disc impulse
+  derivation (`pdflatex phys.tex` twice in `docs/`, which has its own
+  `Makefile`): Newton's law → impulsive limit → restitution → momentum/energy
+  bookkeeping → the tangential (spin) impulse, with a contact-geometry figure
+  and a before/after velocity figure, and an equation-to-source-line table for
+  `sim.c`.
 * **Git history**: `83eeb2d` ("add a 2d bouncing-ball simulator with an impulse
   solver") forked from `sim2d` while it still had both solvers; `5f5e7be`
   ("add rigid bodies as particle sets, drop the impulse solver") moved XPBD

@@ -1,0 +1,588 @@
+% phys.tex -- two colliding discs: from Newton's law to the impulse used by
+% imp2d (see ../CONCEPTS.md).  Build:  pdflatex phys.tex  (twice for refs)
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc}
+
+\setlist{itemsep=2pt,topsep=4pt}
+
+\newcommand{\x}{\bm{x}}
+
+\title{\bfseries Euler rotation equation}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-2.6cm}
+
+\section{Angular momentum theorem from Newton’s laws}
+
+It follows from Newton’s second law applied to every particle of a rigid body,
+plus the rigid-body velocity constraint. The key point is that \(I\) is
+constant only in the \emph{body-fixed frame}, so when you take the inertial time
+derivative of \(\mathbf L=I\boldsymbol\omega\), a rotating-frame term appears.
+
+For each particle $i$,
+
+\[
+m_i \ddot{\mathbf r}_i=\mathbf F_i \qquad \mathbf r_i=\mathbf R_i-\mathbf O.
+\]
+
+
+
+$\mathbf R_i$ --- position vector of particle $i$ measured from some fixed
+reference origin (often an inertial-frame origin).  Let be $O = (0, 0)$ for simplicity.
+
+Cross with \(\mathbf r_i\) and sum over all particles:
+
+\begin{equation}
+\sum_i \mathbf r_i\times m_i\ddot{\mathbf r}_i
+=
+\sum_i \mathbf r_i\times \mathbf F_i .
+\label{eq:newton_cross}
+\end{equation}
+
+Left-hand side: define the total angular momentum about the chosen origin $O$ as
+
+\[
+\mathbf L
+=
+\sum_i \mathbf r_i\times \mathbf p_i
+=
+\sum_i \mathbf r_i\times m_i\dot{\mathbf r}_i,
+\qquad
+\mathbf p_i
+=
+m_i\dot{\mathbf r}_i.
+\]
+
+Now differentiate \(\mathbf L\) with respect to time. Since \(m_i\) is constant,
+
+\[
+\frac{d\mathbf L}{dt}
+=
+\sum_i \frac{d}{dt}\left(\mathbf r_i\times m_i\dot{\mathbf r}_i\right).
+\]
+
+Use the product rule for a cross product:
+
+\[
+\left[
+\quad
+\frac{d}{dt}(\mathbf a\cdot\mathbf b)
+=
+\dot{\mathbf a}\cdot\mathbf b+\mathbf a\cdot\dot{\mathbf b},
+\qquad
+\frac{d}{dt}(\mathbf a\times\mathbf b)
+=
+\dot{\mathbf a}\times\mathbf b+\mathbf a\times\dot{\mathbf b}
+\quad
+\right],
+\]
+
+\[
+\frac{d}{dt}(\mathbf r_i\times m_i\dot{\mathbf r}_i)
+=
+\dot{\mathbf r}_i\times m_i\dot{\mathbf r}_i
++
+\mathbf r_i\times m_i\ddot{\mathbf r}_i.
+\]
+
+The first term vanishes because a vector crossed with itself is
+zero (\(\mathbf a\times\mathbf a=0\)):
+
+\[
+\dot{\mathbf r}_i\times m_i\dot{\mathbf r}_i
+=
+m_i(\dot{\mathbf r}_i\times \dot{\mathbf r}_i)
+=
+0.
+\]
+
+Therefore, LHS of \eqref{eq:newton_cross} is
+
+\[
+\frac{d\mathbf L}{dt}
+=
+\sum_i \mathbf r_i\times m_i\ddot{\mathbf r}_i.
+\]
+
+The right-hand side of \eqref{eq:newton_cross} is the sum of moments of
+all forces about the chosen origin (torque):
+
+\[
+\boldsymbol\tau
+=
+\sum_i \mathbf r_i\times \mathbf F_i.
+\]
+
+Now split forces into external and internal:
+
+\[
+\boldsymbol\tau
+=
+\sum_i \mathbf r_i \times \mathbf F_i
+=
+\sum_i \mathbf r_i \times \mathbf F_i^{\rm ext}
++
+\sum_i \mathbf r_i \times \mathbf F_i^{\rm int}
+=
+\boldsymbol\tau_{\rm ext} + \boldsymbol\tau_{\rm int}
+\]
+
+For an ideal rigid body, the internal-force term cancels in pairs.  Standard
+assumption: internal forces are equal and opposite along the line joining the
+particles:
+
+\[
+  \boldsymbol\tau_{\mathrm{int}}
+  = \sum_i \mathbf r_i \times \mathbf F_i^{\mathrm{int}}
+  = \sum_{i<j} (\mathbf r_i-\mathbf r_j)\times \mathbf F_{ij}
+  = \mathbf 0,
+\]
+
+because internal forces are equal and opposite and act along the line
+joining the particles (strong form of Newton's third law).  So
+
+\[
+\boldsymbol\tau
+=
+\boldsymbol\tau_{\rm ext} + \boldsymbol\tau_{\rm int}
+=
+\boldsymbol\tau_{\rm ext} + \mathbf 0
+=
+\boldsymbol\tau_{\rm ext}.
+\]
+
+Thus the step gives the angular momentum theorem:
+
+\begin{equation}
+\frac{d\mathbf L}{dt}\bigg|_{\text{inertial}}
+=
+\boldsymbol\tau.
+\label{eq:angular_momentum}
+\end{equation}
+
+This is often called Euler’s second law, but it is derived from Newton’s laws.
+
+\section{Rigid-body angular momentum: \(\mathbf L=I\boldsymbol\omega\)}
+
+Let the centre of mass be
+
+\[
+\mathbf R=\frac{1}{M}\sum_i m_i\mathbf r_i,
+\qquad M=\sum_i m_i,
+\]
+
+and define the position of particle \(i\) relative to the centre of mass as
+
+\[
+\boldsymbol\rho_i=\mathbf r_i-\mathbf R.
+\]
+
+Then
+
+\[
+\mathbf r_i=\mathbf R+\boldsymbol\rho_i,
+\qquad
+\dot{\mathbf r}_i=\dot{\mathbf R}+\dot{\boldsymbol\rho}_i.
+\]
+
+The angular momentum about the origin (by definition) is
+
+\[
+\mathbf L
+=
+\sum_i \mathbf r_i\times m_i\dot{\mathbf r}_i.
+\]
+
+ Substitute into the definition
+
+\[
+\mathbf L
+=
+\sum_i \mathbf r_i\times m_i\dot{\mathbf r}_i
+=
+\sum_i (\mathbf R+\boldsymbol\rho_i)\times m_i(\dot{\mathbf R}+\dot{\boldsymbol\rho}_i).
+\]
+
+Expand the cross product (distribute): for each $i$,
+
+\[
+(\mathbf R + \boldsymbol\rho_i) \times (\dot{\mathbf R} + \dot{\boldsymbol\rho}_i)
+=
+\mathbf R \times (\dot{\mathbf R} + \dot{\boldsymbol\rho}_i)
++
+\boldsymbol\rho_i \times (\dot{\mathbf R} + \dot{\boldsymbol\rho}_i).
+\]
+
+\[
+=
+\mathbf R\times\dot{\mathbf R}
++\mathbf R\times\dot{\boldsymbol\rho}_i
++\boldsymbol\rho_i\times\dot{\mathbf R}
++\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i.
+\]
+
+Multiply by $m_i$ and sum over $i$:
+
+\[
+\mathbf L
+=
+\underbrace{\sum_i m_i\,\mathbf R\times\dot{\mathbf R}}_{(1)}
++\underbrace{\sum_i m_i\,\mathbf R\times\dot{\boldsymbol\rho}_i}_{(2)}
++\underbrace{\sum_i m_i\,\boldsymbol\rho_i\times\dot{\mathbf R}}_{(3)}
++\underbrace{\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i}_{(4)}.
+\]
+
+Evaluate each term.
+
+\begin{enumerate}
+\item $\mathbf R$ and $\dot{\mathbf R}$ do not depend on \(i\), so they pull out of the sum:
+\[
+\sum_i m_i\,\mathbf R\times\dot{\mathbf R}
+=
+\mathbf R\times\dot{\mathbf R}\sum_i m_i
+=
+M\,\mathbf R\times\dot{\mathbf R}.
+\]
+
+\item $\mathbf R$ is independent of $i$, so
+
+\[
+\sum_i m_i\,\mathbf R\times\dot{\boldsymbol\rho}_i
+=
+\mathbf R\times\sum_i m_i\dot{\boldsymbol\rho}_i
+=
+\mathbf R\times\mathbf 0
+=
+\mathbf 0,
+\]
+
+because \(\sum_i m_i\dot{\boldsymbol\rho}_i=\dfrac{d}{dt}\sum_i m_i\boldsymbol\rho_i=\mathbf 0\) (see below).
+
+\item $\dot{\mathbf R}$ is independent of $i$, so
+
+\[
+\sum_i m_i\,\boldsymbol\rho_i\times\dot{\mathbf R}
+=
+\left(\sum_i m_i\boldsymbol\rho_i\right)\times\dot{\mathbf R}
+=
+\mathbf 0\times\dot{\mathbf R}
+=
+\mathbf 0.
+\]
+
+\item This is the only term that survives untouched:
+
+\[
+\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i.
+\]
+
+\end{enumerate}
+
+Why the two vanishing sums are zero?  By definition of the centre of mass,
+
+\[
+\sum_i m_i\boldsymbol\rho_i
+=
+\sum_i m_i(\mathbf r_i-\mathbf R)
+=
+\sum_i m_i\mathbf r_i-M\mathbf R
+=
+M\mathbf R-M\mathbf R
+=
+\mathbf 0.
+\]
+
+Differentiating with respect to time (masses constant):
+
+\[
+\sum_i m_i\dot{\boldsymbol\rho}_i
+=
+\frac{d}{dt}\sum_i m_i\boldsymbol\rho_i
+=
+\mathbf 0.
+\]
+
+So both \(\sum_i m_i\boldsymbol\rho_i\) and \(\sum_i
+m_i\dot{\boldsymbol\rho}_i\) vanish identically — this is the mathematical
+content of "the centre of mass is the mass-weighted mean position."
+
+Putting the four terms together,
+
+\[
+\mathbf L
+=
+M\,\mathbf R\times\dot{\mathbf R}
++\mathbf 0+\mathbf 0
++\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i.
+\]
+
+Hence
+
+\[
+\boxed{
+\mathbf L
+=
+\underbrace{M\,\mathbf R\times\dot{\mathbf R}}_{\text{orbital (CM about origin)}}
++
+\underbrace{\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i}_{\mathbf L_{\rm CM}\ \text{(spin about CM)}}
+}
+\]
+
+and therefore
+
+\[
+\mathbf L_{\rm CM}
+=
+\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i
+=
+\mathbf L_{\rm origin}-\mathbf R\times\mathbf P,
+\qquad
+\mathbf P=M\dot{\mathbf R}.
+\]
+
+That is the "substitute the decompositions" step written out in full:
+distribute the cross product, pull origin-independent factors out of the sum,
+and kill the two cross terms using \(\sum_i m_i\boldsymbol\rho_i=\sum_i
+m_i\dot{\boldsymbol\rho}_i=\mathbf 0\).
+
+
+\hrulefill
+
+But by the definition of the centre of mass,
+
+\[
+\sum_i m_i\boldsymbol\rho_i=0,
+\qquad
+\sum_i m_i\dot{\boldsymbol\rho}_i=0.
+\]
+
+So the cross terms vanish, leaving
+
+\[
+\mathbf L_{\rm origin}
+=
+M\mathbf R\times\dot{\mathbf R}
++
+\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i.
+\]
+
+The first term is the angular momentum of the centre of mass about the origin. The second term is the angular momentum **about the centre of mass**:
+
+\[
+\boxed{
+\mathbf L_{\rm CM}
+=
+\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i
+}
+\]
+
+Equivalently,
+
+\[
+\mathbf L_{\rm CM}
+=
+\mathbf L_{\rm origin}-\mathbf R\times \mathbf P,
+\qquad
+\mathbf P=M\dot{\mathbf R}.
+\]
+
+So the formula
+
+\[
+\mathbf L=\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i
+\]
+
+is just the angular momentum about the centre of mass, written using coordinates measured from the centre of mass. In that frame, for a rigid body,
+
+\[
+\dot{\boldsymbol\rho}_i=\boldsymbol\omega\times\boldsymbol\rho_i,
+\]
+
+which gives
+
+\[
+\mathbf L
+=
+\sum_i m_i\,\boldsymbol\rho_i\times(\boldsymbol\omega\times\boldsymbol\rho_i)
+=
+I\boldsymbol\omega.
+\]
+
+\hrulefill
+
+About the center of mass, write a position of particle \(i\) relative to
+the centre of mass
+
+\[
+\boldsymbol\rho_i=\mathbf r_i-\mathbf R,
+\]
+
+where \(\mathbf R\) is the center of mass. For a rigid body,
+
+\[
+\dot{\boldsymbol\rho}_i=\boldsymbol\omega\times\boldsymbol\rho_i.
+\]
+
+Therefore
+
+\[
+\mathbf L
+=
+\sum_i m_i \boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i
+=
+\sum_i m_i \boldsymbol\rho_i\times(\boldsymbol\omega\times\boldsymbol\rho_i).
+\]
+
+Using
+
+\[
+\mathbf a\times(\mathbf b\times\mathbf c)
+=
+\mathbf b(\mathbf a\cdot\mathbf c)-\mathbf c(\mathbf a\cdot\mathbf b),
+\]
+
+we get
+
+\[
+\mathbf L
+=
+\left[
+\sum_i m_i\left(|\boldsymbol\rho_i|^2\mathbf 1
+-\boldsymbol\rho_i\boldsymbol\rho_i^T\right)
+\right]\boldsymbol\omega.
+\]
+
+Define the inertia tensor
+
+\[
+I=\sum_i m_i\left(|\boldsymbol\rho_i|^2\mathbf 1
+-\boldsymbol\rho_i\boldsymbol\rho_i^T\right).
+\]
+
+Then
+
+\[
+\mathbf L=I\boldsymbol\omega.
+\]
+
+In the \emph{body-fixed frame}, the particle coordinates \(\boldsymbol\rho_i\) are
+constant, so \(I\) is a constant matrix. In the inertial frame, \(I(t)\) would
+generally change with time.
+
+\section{Differentiate \(\mathbf L=I\boldsymbol\omega\) correctly}
+
+The torque equation is inertial:
+
+\[
+\boldsymbol\tau=
+\frac{d\mathbf L}{dt}\bigg|_{\text{inertial}}.
+\]
+
+For any vector \(\mathbf A\), the derivative in the inertial frame is related
+to the derivative in a frame rotating with angular velocity
+\(\boldsymbol\omega\) by
+
+\[
+\frac{d\mathbf A}{dt}\bigg|_{\text{inertial}}
+=
+\frac{d\mathbf A}{dt}\bigg|_{\text{body}}
++
+\boldsymbol\omega\times\mathbf A.
+\]
+
+Apply this to \(\mathbf L=I\boldsymbol\omega\). Since \(I\) is constant in the body frame,
+
+\[
+\frac{d\mathbf L}{dt}\bigg|_{\text{body}}
+=
+I\dot{\boldsymbol\omega}.
+\]
+
+Therefore
+
+\[
+\frac{d\mathbf L}{dt}\bigg|_{\text{inertial}}
+=
+I\dot{\boldsymbol\omega}
++
+\boldsymbol\omega\times(I\boldsymbol\omega).
+\]
+
+Using \(\boldsymbol\tau=d\mathbf L/dt|_{\text{inertial}}\),
+
+\[
+\boxed{
+\boldsymbol\tau
+=
+I\dot{\boldsymbol\omega}
++
+\boldsymbol\omega\times(I\boldsymbol\omega)
+}
+\]
+
+This is the Euler rotation equation.
+
+\section{Principal-axis form}
+
+If the body axes are principal axes, \(I=\operatorname{diag}(I_1,I_2,I_3)\),
+and the vector equation becomes the three Euler equations:
+
+\[
+\begin{aligned}
+\tau_1 &= I_1\dot\omega_1+(I_3-I_2)\omega_2\omega_3,\\
+\tau_2 &= I_2\dot\omega_2+(I_1-I_3)\omega_3\omega_1,\\
+\tau_3 &= I_3\dot\omega_3+(I_2-I_1)\omega_1\omega_2.
+\end{aligned}
+\]
+
+So the extra \(\boldsymbol\omega\times(I\boldsymbol\omega)\) term is not an
+additional physical torque; it is the correction that appears because the
+body-fixed basis rotates with the body.
+
+\hrulefill
+
+Table of variables used in the derivation
+
+\begin{description}
+  \item[\(t\)] time; independent variable for all time derivatives (s).
+  \item[\(i,j\)] particle indices labelling individual point masses.
+  \item[\(m_i\)] mass of particle \(i\) (kg).
+  \item[\(\mathbf r_i\)] position vector of particle \(i\) relative to the chosen origin (m).
+  \item[\(\dot{\mathbf r}_i\)] velocity of particle \(i\), \(\dot{\mathbf r}_i = d\mathbf r_i/dt\) (m/s).
+  \item[\(\ddot{\mathbf r}_i\)] acceleration of particle \(i\), \(\ddot{\mathbf r}_i = d^2\mathbf r_i/dt^2\) (m/s\(^2\)).
+  \item[\(\mathbf R\)] centre-of-mass position of the rigid body (m).
+  \item[\(\boldsymbol\rho_i\)] position of particle \(i\) relative to the centre of mass, \(\boldsymbol\rho_i = \mathbf r_i - \mathbf R\) (m).
+  \item[\(\mathbf p_i\)] linear momentum of particle \(i\), \(\mathbf p_i = m_i\dot{\mathbf r}_i\) (kg\(\cdot\)m/s).
+  \item[\(\mathbf F_i\)] total force acting on particle \(i\) (N).
+  \item[\(\mathbf F_i^{\mathrm{ext}}\)] external force acting on particle \(i\) (N).
+  \item[\(\mathbf F_{ij}\)] internal force on particle \(i\) due to particle \(j\) (N).
+  \item[\(\boldsymbol\tau\)] net external torque about the chosen origin (N\(\cdot\)m).
+  \item[\(\mathbf L\)] angular momentum about the chosen origin, \(\mathbf L = \sum_i \mathbf r_i \times m_i\dot{\mathbf r}_i\) (kg\(\cdot\)m\(^2\)/s).
+  \item[\(\boldsymbol\omega\)] angular velocity vector of the body-fixed frame (rad/s).
+  \item[\(\dot{\boldsymbol\omega}\)] angular acceleration vector (rad/s\(^2\)).
+  \item[\(\omega_1,\omega_2,\omega_3\)] components of \(\boldsymbol\omega\) along the principal body axes (rad/s).
+  \item[\(\tau_1,\tau_2,\tau_3\)] components of \(\boldsymbol\tau\) along the principal body axes (N\(\cdot\)m).
+  \item[\(I\)] inertia tensor, a \(3\times3\) symmetric matrix mapping \(\boldsymbol\omega \mapsto \mathbf L\) (kg\(\cdot\)m\(^2\)).
+  \item[\(I_{xx},I_{yy},I_{zz}\)] moments of inertia (diagonal entries), e.g.\ \(I_{xx}=\int\rho(y^2+z^2)\,dV\) (kg\(\cdot\)m\(^2\)).
+  \item[\(I_{xy},I_{xz},I_{yz}\)] products of inertia (off-diagonal entries), e.g.\ \(I_{xy}=-\int\rho xy\,dV\) (kg\(\cdot\)m\(^2\)).
+  \item[\(I_1,I_2,I_3\)] principal moments of inertia; eigenvalues of \(I\), diagonal in the principal-axis frame (kg\(\cdot\)m\(^2\)).
+  \item[\(\mathbf n\)] unit vector along an arbitrary rotation axis.
+  \item[\(I_{\mathbf n}\)] moment of inertia about the axis \(\mathbf n\), \(I_{\mathbf n}=\mathbf n^{T}I\,\mathbf n\) (kg\(\cdot\)m\(^2\)).
+  \item[\(\mathbf 1\)] \(3\times3\) identity matrix, used in the definition of \(I\).
+  \item[\(\rho(\mathbf r)\)] mass density at position \(\mathbf r\) (kg/m\(^3\)).
+  \item[\(dV\)] infinitesimal volume element (m\(^3\)).
+  \item[\(x,y,z\)] Cartesian coordinates of \(\mathbf r\) (m).
+  \item[\(T_{\mathrm{rot}}\)] rotational kinetic energy, \(T_{\mathrm{rot}}=\tfrac12\boldsymbol\omega\cdot I\boldsymbol\omega\) (J).
+  \item[\(\mathbf A\)] generic vector used in the rotating-frame derivative rule.
+\end{description}
+
+\end{document}

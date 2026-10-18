@@ -40,7 +40,21 @@ demo-ppm: $(BIN)
 	          --dump-ppm frame.ppm --quiet
 	@echo "wrote frame.ppm"
 
+PANDOC      ?= pandoc
+PANDOCFLAGS := -s -V fontsize=13pt -V maxwidth=52em
+MD          := README.md CONCEPTS.md
+HTML        := $(MD:.md=.html)
+
+html: $(HTML)
+
+%.html: %.md
+	$(PANDOC) $(PANDOCFLAGS) $< -o $@
+
+# LaTeX derivation of the impulse (its own Makefile resolves the cross-refs)
+pdf:
+	$(MAKE) -C docs all
+
 clean:
 	rm -f $(OBJ) $(BIN) frame.ppm selftest.ppm
 
-.PHONY: all test demo-ppm clean
+.PHONY: all test demo-ppm html pdf clean

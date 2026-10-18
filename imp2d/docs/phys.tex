@@ -17,7 +17,10 @@
 \newcommand{\Jimp}{\bm{J}}
 \newcommand{\hh}{\hat{n}}
 \newcommand{\ttt}{\hat{t}}
-\newcommand{\pp}{\bm{p}}
+\newcommand{\pp}{\bm{p}}          % linear momentum p = m v
+\newcommand{\PP}{\bm{P}}          % total momentum, P = sum p over a set of bodies
+\newcommand{\rr}{\bm{r}}          % lever arm: contact point relative to the centre
+\newcommand{\dtc}{\Delta t_c}     % duration of the contact (NOT the substep \Delta t)
 \newcommand{\dd}{\mathrm{d}}
 \newcommand{\cn}{\text{(neg.\ if approaching)}}
 
@@ -42,7 +45,7 @@ We want the velocities right after the touch, starting from
 \begin{equation}
   m_i\,\frac{\dd \vV_i}{\dd t}=\sum \bm{F},
   \qquad
-  I_i\,\frac{\dd\omega_i}{\dd t}=\sum \pp\times\bm F
+  I_i\,\frac{\dd\omega_i}{\dd t}=\sum\tau_i=\sum\rr_i\times\bm F
   \label{eq:newton}
 \end{equation}
 and ending with the single line that \texttt{sim.c:365} computes,
@@ -53,6 +56,83 @@ and ending with the single line that \texttt{sim.c:365} computes,
   \Delta\vV_j=+\frac{j_n}{m_j}\,\hh .
   \label{eq:goal}
 \end{equation}
+where
+% The symbol list is set in from both margins --- a hanging block that is
+% visibly narrower than the running prose around it.
+\begin{description}[style=sameline, itemsep=3pt,
+                    labelwidth=*, labelindent=1.8em, leftmargin=!,
+                    rightmargin=2.4em]
+  \item[$t$] time. $\dtc=t^{+}-t^{-}$ is the (vanishingly short) duration of the
+    contact, $\Delta t=1/240$ s the substep of \texttt{sim\_step()};
+    $\Delta t$ survives in the integration of gravity and \emph{not} in
+    \eqref{eq:goal}.
+  \item[$m_i$, $m_j$] masses of the two discs, constant during an impact
+    (rigidity: a body neither gains nor loses mass). Spawned as
+    $m=\rho r^{k}$ with $\rho=$ \texttt{--density} and $k=$
+    \texttt{--mass-exp} $\in\{1,2,3\}$, so $k=2$ is the physical law for
+    coplanar discs of constant areal density.
+  \item[$\vV_i$, $\vV_j$] velocity of the \emph{centre} of each disc,
+    $\vV=(v_x,v_y)$ in px/s --- a rigid disc has no other translational degree
+    of freedom; $\Delta\vV_{i}$, $\Delta\vV_{j}$ are the velocity jumps that
+    \eqref{eq:goal} produces.
+  \item[$\pp=m\vV$, $\PP$] linear momentum of one disc, capital $\PP$ for
+    the total of a set, $\PP=\sum\pp$. An \emph{impulse} is exactly a
+    momentum transfer, $\Delta\pp=\Jimp$, which is why impulse and momentum
+    share units here (mass$\cdot$px/s).
+  \item[$\omega_i$, $\omega_j$] angular velocity (rad/s) about the axis through
+    the centre, perpendicular to the plane. Positive $\omega$ turns a disc
+    \emph{clockwise as seen on screen} ($y$ is down). The angle $\theta$ itself
+    is integrated for the renderer only --- the solver reads $\omega$, never
+    $\theta$.
+  \item[$I_i$, $I_j$] moment of inertia about the body's \emph{own} centre; for
+    a solid disc $I=\tfrac12 m r^{2}$, whence the identity $r^{2}/I=2/m$ used
+    repeatedly below (and the reason $k_t=3k_n$ in \eqref{eq:kt3}).
+  \item[$\sum\bm F$] total force on the body: the contact force plus everything
+    non-impulsive (gravity, walls). Section~\ref{sec:jump} shows which part of
+    this sum survives $\dtc\to0$.
+  \item[$\tau$] torque --- a scalar in planar motion: $\tau=\rr\times\bm F$, with
+    $\bm a\times\bm b=a_xb_y-a_yb_x$ the 2D \emph{scalar} cross product. The
+    lever arm $\rr$ is the point where $\bm F$ acts, measured from the body's
+    \emph{own centre}: at a disc surface $\rr_i=r_i\hh$, so $|\rr_i|$ happens to
+    be the radius $r_i$ (bold $\rr$ the vector, plain $r_i$ the radius), and
+    $\rr$ is \texttt{px, py} in \texttt{sim.c}. Equation \eqref{eq:newton} sums
+    $\sum\tau$ over the forces on the body; that sum is what makes friction spin
+    the discs.
+  \item[$\hh$] contact unit normal, the direction of the line of centres,
+    $\hh=(\x_j-\x_i)/d$ with $d=|\x_j-\x_i|$, pointing from $i$ to $j$
+    \eqref{eq:geometry}. The impulse is along $\hh$; the geometry is the only
+    place the discs' positions enter.
+  \item[$v_n$] relative normal velocity $v_n=(\vV_j-\vV_i)\cdot\hh$, in px/s:
+    negative $\Longleftrightarrow$ approaching \eqref{eq:vn}. It is the single
+    scalar that the whole normal solve is driven by.
+  \item[$e$] coefficient of restitution, $e\in[0,1]$ (\texttt{--rest}): $e=1$
+    elastic, $e=0$ perfectly inelastic along $\hh$. A user constant, not a state
+    variable --- the same value for walls and for pairs.
+  \item[$j_n$] the \emph{scalar normal impulse}: the momentum (mass$\cdot$px/s,
+    not newtons --- no force appears anywhere) that the contact delivers along
+    $\hh$. One number serves both bodies: $+j_n\hh$ on $j$, $-j_n\hh$ on $i$
+    (Newton's third law), which is why the system closes with a single unknown.
+  \item[$1/m_i+\dfrac{1}{m_j}$] the \emph{normal effective mass} $k_n$ of the
+    contact --- impulse required per unit of relative normal velocity
+    \eqref{eq:kn}; its reciprocal $m_{\text{eff}}=1/k_n= m_im_j/(m_i+m_j)$ is
+    the reduced mass. Inverse masses in the denominator are what split the
+    velocity change as $|\Delta\vV_i|:|\Delta\vV_j|=m_j:m_i$.
+\end{description}
+
+\noindent
+\textbf{Units and index conventions used throughout.} All quantities are in the
+solver's own units --- pixels and seconds, never SI --- since the simulation
+\emph{is} the physical model here; a subscript always names the disc the
+quantity belongs to; a superscript $-$ or $+$ marks the state immediately
+before or immediately after the impact; and $\Delta(\cdot)=(\cdot)^{+}-(\cdot)^{-}$
+is the jump across the impact, not a small number.
+
+Symbols introduced later, as they are needed: $\ttt=(-n_y,n_x)$ the contact
+tangent, $v_{\text{slip}}$ the relative \emph{surface} velocity along $\ttt$,
+$j_t$ and $k_t$ the tangential impulse and its effective mass, $\mu$ the Coulomb
+coefficient (\texttt{--mu}), $\delta=r_i+r_j-d$ the penetration and $\beta$ the
+strength of its positional correction.
+
 Along the way: why the contact \emph{force} disappears, why momentum is
 conserved exactly, when kinetic energy can and cannot grow, why the mass ratio
 appears as an inverse-mass ratio, and how the same algebra with rotation gives
@@ -61,16 +141,14 @@ the friction/spin update.
 \subsection{Conventions}
 Positions are screen pixels, $x$ right and $y$ \emph{down}; the figures are
 drawn in the usual mathematical orientation (a reflection does not change any
-of the algebra). The 2D cross product is the scalar
-$\bm a\times\bm b=a_xb_y-a_yb_x$, and for an angular velocity about the axis
-perpendicular to the plane, $\bm\omega\times\pp=\omega\,(-p_y,\,p_x)$.
-Superscripts $-$ and $+$ denote immediately before and immediately after the
-impact.
+of the algebra). With the scalar cross product defined above,
+$\hh\times\ttt=+1$, and an angular velocity about the axis perpendicular to the
+plane acts as $\bm\omega\times\rr=\omega\,(-r_y,\,r_x)$.
 
 %--------------------------------------------------------------------------
 \section{Impulsive and non-impulsive forces}
 
-Let the contact last $[t^-,\,t^+]$, of duration $\tau=t^+-t^-$.
+Let the contact last $[t^-,\,t^+]$, of duration $\dtc=t^+-t^-$.
 Equation \eqref{eq:newton} for body $i$ reads, with the contact force
 $\bm F_{j\to i}$ from $j$ and everything else collected in $\bm F_i^{\text{ext}}$
 (gravity, walls),
@@ -81,9 +159,9 @@ $\bm F_{j\to i}$ from $j$ and everything else collected in $\bm F_i^{\text{ext}}
   \label{eq:integrated}
 \end{equation}
 
-Rigid-body impacts are idealisations: as $\tau\to0$ the contact force grows
+Rigid-body impacts are idealisations: as $\dtc\to0$ the contact force grows
 without bound while its \emph{integral} stays finite
-($|\bm F_{j\to i}|\sim 1/\tau$). Such a force is called \textbf{impulsive}, and
+($|\bm F_{j\to i}|\sim 1/\dtc$). Such a force is called \textbf{impulsive}, and
 its integral is the \textbf{impulse}
 \begin{equation}
   \Jimp:=\int_{t^-}^{t^+}\bm F\,\dd t
@@ -91,7 +169,7 @@ its integral is the \textbf{impulse}
   \label{eq:impulse}
 \end{equation}
 Gravity is bounded, $|\bm F^{\text{ext}}|\le m g$, so its integral is
-$O(\tau)\to 0$: it is \textbf{non-impulsive} and drops out of the impact
+$O(\dtc)\to 0$: it is \textbf{non-impulsive} and drops out of the impact
 (Section~\ref{sec:jump} carries out both limits explicitly).
 That is the precise sense in which ``a bounce does not feel gravity'', and it is
 why \texttt{sim\_step()} is an \emph{operator split} (first-order Lie
@@ -111,11 +189,11 @@ Three operations; each is where a subtlety hides, so they are done one at a time
 
 \paragraph{Step 0 --- what $t^\pm$ and $\vV^\pm$ are.}
 Let $t_c$ be the instant the discs first touch and let the contact release at
-$t_c+\tau_c$. The symbols $\vV^\pm$ are \emph{one-sided limits},
+$t_c+\dtc$. The symbols $\vV^\pm$ are \emph{one-sided limits},
 \[
   \vV^-=\lim_{\varepsilon\to0^+}\vV(t_c-\varepsilon),
   \qquad
-  \vV^+=\lim_{\varepsilon\to0^+}\vV(t_c+\tau_c+\varepsilon):
+  \vV^+=\lim_{\varepsilon\to0^+}\vV(t_c+\dtc+\varepsilon):
 \]
 the state the moment before the touch and the moment after the release. Between
 them $\vV$ is not differentiable --- it is exactly the quantity that
@@ -125,7 +203,7 @@ two states are simply ``velocity entering the contact solve'' and ``velocity
 after the impulse has been applied'', both inside one substep.)
 
 \paragraph{Step 1 --- integrate over a window containing the whole contact.}
-Choose $t^-<t_c$ and $t^+>t_c+\tau_c$ and integrate \eqref{eq:newton} for body
+Choose $t^-<t_c$ and $t^+>t_c+\dtc$ and integrate \eqref{eq:newton} for body
 $i$ term by term:
 \begin{equation}
   \underbrace{\int_{t^-}^{t^+} m_i\,\frac{\dd\vV_i}{\dd t}\,\dd t}_{\text{(I)}}
@@ -157,18 +235,18 @@ which the two discs deform --- all invisible on this side. That is precisely the
 licence an impulse solver exploits to replace a whole event by one vector.
 
 \paragraph{Step 3 --- what survives of (II) and (III).}
-Classify the forces by their behaviour as the contact duration $\tau_c\to0$:
+Classify the forces by their behaviour as the contact duration $\dtc\to0$:
 \begin{center}
 \scriptsize
 \begin{tabular}{@{}llll@{}}
 \toprule
 force & size on the contact window & its integral & survives? \\
 \midrule
-$\bm F^{\text{ext}}$ (gravity, \dots) & $\le B$, independent of $\tau_c$
-  & $\le B\,\tau_c\to0$ & no \\
-$\bm F_{j\to i}$, contact, finite $\Delta\vV$ & $\sim C/\tau_c$
+$\bm F^{\text{ext}}$ (gravity, \dots) & $\le B$, independent of $\dtc$
+  & $\le B\,\dtc\to0$ & no \\
+$\bm F_{j\to i}$, contact, finite $\Delta\vV$ & $\sim C/\dtc$
   & $\to\Jimp=O(1)$ & \textbf{yes} \\
-hypothetical $\sim C/\tau_c^{p}$, $p>1$ & --- & $\to\infty$ & unphysical
+hypothetical $\sim C/\dtc^{\,p}$, $p>1$ & --- & $\to\infty$ & unphysical
   (infinite jump) \\
 \bottomrule
 \end{tabular}
@@ -176,7 +254,7 @@ hypothetical $\sim C/\tau_c^{p}$, $p>1$ & --- & $\to\infty$ & unphysical
 Formally, with $|\bm F_i^{\text{ext}}|\le B$ on the window,
 \[
   \biggl|\int_{t^-}^{t^+}\bm F_i^{\text{ext}}\,\dd t\biggr|
-  \;\le\; B\,(t^+-t^-)\;\xrightarrow[\ \tau_c\to0\ ]{\ }\;0 ,
+  \;\le\; B\,(t^+-t^-)\;\xrightarrow[\ \dtc\to0\ ]{\ }\;0 ,
 \]
 whereas the contact integral tends to the finite vector $\Jimp$
 of \eqref{eq:impulse} --- that is what ``impulsive'' means. So \eqref{eq:window}
@@ -184,12 +262,12 @@ collapses to
 \[
   \text{(I)}=\text{(II)}+\text{(III)}
   \quad\Longrightarrow\quad
-  m_i\,\Delta\vV_i=-\Jimp+\bm 0 ,
+  m_i\,\Delta\vV_i=\Delta\pp_i=-\Jimp+\bm 0 ,
 \]
-which is \eqref{eq:integrated} with its second integral gone, and is the
-$m\,\Delta\vV=\sum\Jimp$ promised in the title. The same computation for body
-$j$ gives $m_j\Delta\vV_j=+\Jimp$, and Newton's third law is what makes the two
-impulses one unknown.
+which is \eqref{eq:integrated} with its second integral gone: the momentum
+$\pp_i=m_i\vV_i$ of body $i$ has changed by exactly the impulse it received.
+The same computation for body $j$ gives $\Delta\pp_j=+\Jimp$, and Newton's
+third law is what makes the two impulses one unknown.
 
 \paragraph{Distribution wording (the same argument in one line).}
 A rigid impact makes $\vV$ a step function,
@@ -202,7 +280,7 @@ Integrating over a window that contains $t_c$ uses $\int\delta=1$ --- which is
 Step 2 plus Step 3 compressed.
 
 \paragraph{What the code does instead of taking a limit.}
-\texttt{imp2d} never lets $\tau_c\to0$; a substep is $\Delta t=1/240$ s and the
+\texttt{imp2d} never lets $\dtc\to0$; a substep is $\Delta t=1/240$ s and the
 contact is assumed to complete \emph{within} it. Both halves of
 \eqref{eq:window} are then handled, in the order of \texttt{sim\_step()}, but
 \emph{differently}:
@@ -221,7 +299,7 @@ contact is assumed to complete \emph{within} it. Both halves of
   impulse at 60, 240 or 480 Hz. Only \eqref{eq:ftc} was used; no force, no
   duration.
 \end{itemize}
-Same law $m\,\Delta\vV=\sum\Jimp$ in both cases; the difference is only \emph{how
+Same law $\Delta\pp=\sum\Jimp$ in both cases; the difference is only \emph{how
 the impulse is produced} --- rectangle rule for gravity, constraint solve for
 contacts. That asymmetry is the whole reason a fixed-$\Delta t$ impulse solver
 can be both stable and time-step-independent.
@@ -230,17 +308,18 @@ With the limit of Section~\ref{sec:jump} taken, the non-impulsive term of
 \eqref{eq:integrated} is gone; doing the same computation for body $j$:
 \begin{equation}
   \boxed{\;
-  m_i\,\Delta\vV_i=-\Jimp,\qquad
-  m_j\,\Delta\vV_j=+\Jimp \;}
+  \Delta\pp_i=m_i\,\Delta\vV_i=-\Jimp,\qquad
+  \Delta\pp_j=m_j\,\Delta\vV_j=+\Jimp \;}
   \qquad\Longleftrightarrow\qquad
-  \boxed{\;m\,\Delta\vV=\textstyle\sum\Jimp\;}
+  \boxed{\;\Delta\pp=\textstyle\sum\Jimp\;}
   \label{eq:impulse-momentum}
 \end{equation}
-where $\Jimp$ is the impulse \emph{$i$ receives from $j$}, taken with sign so
-that a compressive hit has $\Jimp$ along $+\hh$ on $j$. The second box is the
-general statement --- sum over all contacts active in the substep, plus the
-non-impulsive gravity term written as $m\,\bm g\,\Delta t$ --- specialised to one
-pair. Note what entered and what did not:
+where $\pp=m\vV$ and $\Jimp$ is the impulse \emph{$i$ receives from $j$}, taken
+with sign so that a compressive hit has $\Jimp$ along $+\hh$ on $j$. The second
+box is the general statement --- sum over all contacts active in the substep,
+plus the non-impulsive gravity term written as $m\,\bm g\,\Delta t$ --- of which
+the first box is the two-body specialisation. Note what entered and what did
+not:
 \begin{itemize}
 \item \emph{entered}: Newton's third law, $\Jimp_{i\leftarrow j}=-\Jimp_{j\leftarrow i}$,
   which is what makes $\Jimp$ a single unknown vector for the pair;
@@ -389,11 +468,11 @@ $\sum 1/m$ in the denominator.
 \subsection{Linear momentum: exactly, always}
 Summing \eqref{eq:impulse-momentum} over the pair,
 \begin{equation}
-  \Delta\bm P:=\Delta\bigl(m_i\vV_i+m_j\vV_j\bigr)=-\Jimp+\Jimp=\bm 0 ,
-  \qquad\boxed{\;\Delta\bm P=\bm 0\ \text{for any }e,\mu.}
+  \Delta\PP:=\Delta\bigl(\pp_i+\pp_j\bigr)=-\Jimp+\Jimp=\bm 0 ,
+  \qquad\boxed{\;\Delta\PP=\bm 0\ \text{for any }e,\mu.}
   \label{eq:momentum}
 \end{equation}
-and for the whole system $\Delta\bm P=\bigl(\sum_{\text{pairs}}\bm 0\bigr)
+and for the whole system $\Delta\PP=\bigl(\sum_{\text{pairs}}\bm 0\bigr)
 +\bigl(\text{wall impulses}\bigr)+\bigl(\sum m\,\bm g\,\Delta t\bigr)$: internal
 contacts cannot move the centre of mass. This is a structural property, not a
 tolerance --- it is what the selftest measures to $2\%$ (round-off only).
@@ -470,14 +549,14 @@ because that resistance acts \emph{at the surface}, it produces torque: this is
 the whole reason the balls in \texttt{imp2d} spin.
 
 \subsection{Contact kinematics}
-The velocity of the material point of disc $i$ sitting at $\pp_i=r_i\hh$
+The velocity of the material point of disc $i$ sitting at $\rr_i=r_i\hh$
 (relative to its centre) is
 \begin{equation}
-  \bm u_i=\vV_i+\bm\omega_i\times\pp_i,
+  \bm u_i=\vV_i+\bm\omega_i\times\rr_i,
   \qquad
-  (\bm\omega\times\pp)\cdot\ttt=\omega\,(\pp\times\ttt),
+  (\bm\omega\times\rr)\cdot\ttt=\omega\,(\rr\times\ttt),
   \qquad
-  \pp_i\times\ttt=+r_i,\quad \pp_j\times\ttt=-r_j ,
+  \rr_i\times\ttt=+r_i,\quad \rr_j\times\ttt=-r_j ,
 \end{equation}
 since $\hh\times\ttt=+1$. The \textbf{slip velocity} at the contact is
 \begin{equation}
@@ -489,7 +568,7 @@ since $\hh\times\ttt=+1$. The \textbf{slip velocity} at the contact is
 \subsection{Solve for the tangential impulse}
 Apply the pair $\mp j_t\ttt$ (i.e.\ $-j_t\ttt$ to $i$, $+j_t\ttt$ to $j$, again a
 third-law pair, so momentum stays exact). The impulse--momentum relation
-\eqref{eq:impulse-momentum} and its angular twin $I\,\Delta\omega=\pp\times\Jimp$
+\eqref{eq:impulse-momentum} and its angular twin $I\,\Delta\omega=\tau=\rr\times\Jimp$
 give
 \begin{equation}
   \Delta\vV_i=-\frac{j_t}{m_i}\ttt,\quad
@@ -719,7 +798,7 @@ $\Delta\vV$, $\Delta\omega=-j_t r/I$ & \texttt{sim.c:282--287} & \eqref{eq:tange
 friction only if $j_n\neq0$    & \texttt{sim.c:374}      & item (3) above \\
 wall: $j_n=(1+e)m\|v_n\|$      & \texttt{sim.c:299,307,316,324} & $m_j\to\infty$ limit \\
 $\delta$, positional projection& \texttt{sim.c:378--384} & item (2) above \\
-$KE$, $\bm P$                  & \texttt{sim.c:436,445}  & \eqref{eq:konig} \\
+$KE$, $\PP$                  & \texttt{sim.c:436,445}  & \eqref{eq:konig} \\
 \bottomrule
 \end{tabular}
 
@@ -734,19 +813,19 @@ $KE$, $\bm P$                  & \texttt{sim.c:436,445}  & \eqref{eq:konig} \\
 {\small
 \begin{align*}
   m\dot{\vV}=\textstyle\sum\bm F
-  &\ \xrightarrow[\ \tau\to0\ ]{\ \int \dd t\ }\
-   m\,\Delta\vV=\textstyle\sum\Jimp
+  &\ \xrightarrow[\ \dtc\to0\ ]{\ \int \dd t\ }\
+   \Delta\pp=\textstyle\sum\Jimp,\quad\pp=m\vV
    \quad\text{(only impulsive forces survive)}\\
   \Jimp=j\hh,\quad v_n^{+}=-e\,v_n^{-}
   &\ \Longrightarrow\
    j=-\,(1+e)\,\frac{v_n^{-}}{1/m_i+1/m_j}
    \quad\text{(and }m\,\Delta\vV_i=-\Jimp=-m\,\Delta\vV_j\text{)}\\
-  &\ \Longrightarrow\ \Delta\bm P=0,\qquad
+  &\ \Longrightarrow\ \Delta\PP=0,\qquad
    \Delta KE=-\tfrac12(1-e^2)m_{\text{eff}}(v_n^{-})^2\le0 \iff e\le1,\\
   \Jimp=j_t\ttt\ \text{at the surface}
   &\ \Longrightarrow\ k_t=3k_n,\
    j_t=\operatorname{clamp}\!\bigl(-v_{\text{slip}}/k_t,\ \pm\mu j_n\bigr),\
-   \Delta\omega=-j_t r/I,
+   \Delta\omega=\tau/I=-j_t r/I,
 \end{align*}
 i.e.\ a mass-weighted, one-sided, momentum-exact velocity update --- which is
 exactly what \texttt{sim.c} spends its inner loop doing.
