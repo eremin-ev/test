@@ -1327,11 +1327,25 @@ expect).  Use the `poke` mode to recover from this unexpected `setterm` behavior
   [user@ms-s1-max ~]$ sudo usermod -aG video,render <username>
   ```
 
-  Pull the podman image:
+  Inspect the exact gufo-runtime revision on the github image registry (ghcr.io):
 
   ```bash
   [user@ms-s1-max ~]$ podman search --list-tags ghcr.io/gufo-org/toolboxes/gufo-runtime
 
+  [user@ms-s1-max ~]$ skopeo inspect \
+      docker://ghcr.io/gufo-org/toolboxes/gufo-runtime:latest | jq '.Labels'
+  {
+    "org.gufo.engine.revision": "33731145678c1e3edb1ad05f3224d2d08f1c3983",
+    "org.opencontainers.image.created": "2026-10-30T10:56:27Z",
+    "org.opencontainers.image.revision": "unknown",
+    "org.opencontainers.image.source": "https://github.com/gufo-org/toolboxes",
+    "org.opencontainers.image.version": "0.28.0"
+  }
+  ```
+
+  Pull the latest podman image of the gufo-runtime:
+
+  ```bash
   [user@ms-s1-max ~]$ podman pull ghcr.io/gufo-org/toolboxes/gufo-runtime:latest
   ```
 
