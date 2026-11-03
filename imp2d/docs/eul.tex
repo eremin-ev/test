@@ -7,7 +7,7 @@
 \usepackage{booktabs}
 \usepackage{enumitem}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta,calc}
+\usetikzlibrary{arrows.meta,angles,quotes,calc}
 
 \setlist{itemsep=2pt,topsep=4pt}
 
@@ -24,9 +24,11 @@
 \section{Angular momentum theorem from Newton’s laws}
 
 It follows from Newton’s second law applied to every particle of a rigid body,
-plus the rigid-body velocity constraint. The key point is that \(I\) is
+plus the rigid-body velocity constraint. The key point is that $I$ is
 constant only in the \emph{body-fixed frame}, so when you take the inertial time
 derivative of \(\mathbf L=I\boldsymbol\omega\), a rotating-frame term appears.
+This means differentiate with respect to time while holding the inertial-frame basis
+vectors fixed.
 
 For each particle $i$,
 
@@ -37,7 +39,8 @@ m_i \ddot{\mathbf r}_i=\mathbf F_i \qquad \mathbf r_i=\mathbf R_i-\mathbf O.
 
 
 $\mathbf R_i$ --- position vector of particle $i$ measured from some fixed
-reference origin (often an inertial-frame origin).  Let be $O = (0, 0)$ for simplicity.
+reference origin $\mathbf O$ (often an inertial-frame origin).
+Let be $\mathbf O = (0, 0)$ for simplicity.
 
 Cross with \(\mathbf r_i\) and sum over all particles:
 
@@ -53,9 +56,9 @@ Left-hand side: define the total angular momentum about the chosen origin $O$ as
 \[
 \mathbf L
 =
-\sum_i \mathbf r_i\times \mathbf p_i
+\sum_i \mathbf r_i\times m_i\dot{\mathbf r}_i
 =
-\sum_i \mathbf r_i\times m_i\dot{\mathbf r}_i,
+\sum_i \mathbf r_i\times \mathbf p_i,
 \qquad
 \mathbf p_i
 =
@@ -584,5 +587,403 @@ Table of variables used in the derivation
   \item[\(T_{\mathrm{rot}}\)] rotational kinetic energy, \(T_{\mathrm{rot}}=\tfrac12\boldsymbol\omega\cdot I\boldsymbol\omega\) (J).
   \item[\(\mathbf A\)] generic vector used in the rotating-frame derivative rule.
 \end{description}
+
+\hrule
+
+Angular momentum is defined as
+\[
+\mathbf L=\sum_i \mathbf r_i\times \mathbf p_i
+=\sum_i \mathbf r_i\times m_i\dot{\mathbf r}_i
+\]
+
+because it is the **moment of linear momentum** about the chosen origin. The cross product is not arbitrary: it is exactly the mathematical object that measures “how much momentum is circulating around the origin,” rather than how much is moving radially away from or toward it.
+
+Key points:
+
+1. **Only the tangential component of momentum contributes to rotation.**
+
+   For a particle,
+   \[
+   |\mathbf r\times \mathbf p|=r p\sin\theta,
+   \]
+   where \(\theta\) is the angle between \(\mathbf r\) and \(\mathbf p\). If \(\mathbf p\parallel \mathbf r\), the particle moves radially and \(\mathbf L=0\). If \(\mathbf p\perp \mathbf r\), the full momentum contributes to rotation. The cross product automatically picks out the perpendicular/tangential part.
+
+2. **The cross product gives the axis and orientation of rotation.**
+   \(\mathbf r\times\mathbf p\) is perpendicular to the plane spanned by \(\mathbf r\) and \(\mathbf p\), with direction given by the right-hand rule. Thus it is an axial vector: its direction is the rotation axis, and its magnitude measures the rotational “amount.”
+
+3. **It follows from rotational symmetry / torque.**
+   For a particle,
+   \[
+   \dot{\mathbf L}
+   =\dot{\mathbf r}\times\mathbf p+\mathbf r\times\dot{\mathbf p}
+   =0+\mathbf r\times\mathbf F
+   =\boldsymbol\tau.
+   \]
+   So the cross-product definition is precisely the one whose time derivative gives torque:
+   \[
+   \boldsymbol\tau=\mathbf r\times\mathbf F.
+   \]
+   If angular momentum were defined with a dot product, it would not have this rotational meaning or this torque relation.
+
+4. **Why \(m_i\dot{\mathbf r}_i\)?**
+   For an ordinary point mass,
+   \[
+   \mathbf p_i=m_i\dot{\mathbf r}_i
+   \]
+   is the linear momentum. More generally, \(\mathbf p_i\) should be the momentum conjugate to \(\mathbf r_i\); for simple mechanical systems that is \(m_i\dot{\mathbf r}_i\). Thus angular momentum is the moment of the actual linear momentum.
+
+5. **In rigid-body/Euler equations**, one writes
+   \[
+   \mathbf L=I\boldsymbol\omega,
+   \]
+   and in the body frame
+   \[
+   \frac{d\mathbf L}{dt}\bigg|_{\text{inertial}}
+   =
+   \frac{d\mathbf L}{dt}\bigg|_{\text{body}}
+   +\boldsymbol\omega\times\mathbf L
+   =\boldsymbol\tau.
+   \]
+   Hence
+   \[
+   I\dot{\boldsymbol\omega}
+   +\boldsymbol\omega\times(I\boldsymbol\omega)
+   =\boldsymbol\tau,
+   \]
+   the Euler rotation equation. The cross product appears because angular momentum is a vector associated with rotation and because the body-frame axes themselves rotate.
+
+So the cross product is there because angular momentum is the **oriented moment of momentum about a point**: it measures rotational motion, gives the rotation axis, and is the quantity whose rate of change is torque.
+
+\hrule
+
+\begin{tikzpicture}[>=Stealth,scale=1.5,font=\small]
+
+  % --- key points -------------------------------------------------
+  \coordinate (O)  at (0,0);                  % origin
+  \coordinate (P)  at (4,1.2);                % particle
+  \coordinate (d)  at (1.6,-1.1);             % direction of p
+  \coordinate (Pm) at ($(P)+(d)$);            % tip of p
+  \coordinate (Q)  at ($(O)+(d)$);            % parallelogram corner
+  \coordinate (F)  at (1.844,2.683);          % foot of perpendicular
+  \coordinate (Rext) at (5,1.5);              % extension of r beyond P
+
+  % parallelogram: its area is |r x p|
+  \fill[blue!8] (O) -- (P) -- (Pm) -- (Q) -- cycle;
+  \draw[blue!45,dashed] (Q) -- (Pm);
+  \draw[blue!45]        (O) -- (Q);
+
+  % perpendicular distance from O to the line of p
+  \draw[dashed,gray,thick] (O) -- (F);
+  \pic[draw,angle radius=2.5mm,angle eccentricity=0.55]
+       {right angle=O--F--P};
+  \node[gray,right] at ($(O)!0.55!(F)$) {$r\sin\theta$};
+
+  % vectors
+  \draw[->,very thick,blue] (O) -- (P)
+        node[midway,above left,inner sep=2pt]{$\mathbf r$};
+  \draw[->,very thick,red]  (P) -- (Pm)
+        node[below right,inner sep=2pt]{$\mathbf p=m\dot{\mathbf r}$};
+
+  % angle between r and p
+  \pic[draw,->,"$\theta$",angle radius=0.85cm,angle eccentricity=1.6]
+       {angle=Pm--P--Rext};
+
+  % origin and L out of the page
+  \draw[very thick,purple,fill=white] (O) circle (0.15);
+  \fill[purple] (O) circle (0.04);
+  \node[purple,left=8pt,align=right] at (O)
+       {$\mathbf L=\mathbf r\times\mathbf p$\\ (out of page)};
+
+\end{tikzpicture}
+
+\hrule
+
+\begin{tikzpicture}[>=Stealth,scale=1.3,font=\small]
+
+  % rotation axis (z)
+  \draw[thick,gray] (0,-1.2) -- (0,4.2);
+  \node[gray,above] at (0,4.2) {rotation axis};
+
+  % origin on the axis
+  \coordinate (O) at (0,1.0);
+  \fill (O) circle (1.6pt);
+  \node[below left] at (O) {$O$};
+
+  % particle off the axis
+  \coordinate (P) at (2.4,3.2);
+  \fill[red] (P) circle (2.4pt);
+  \node[red,above right] at (P) {particle $i$};
+
+  % r_i : point-to-point
+  \draw[->,very thick,blue] (O) -- (P)
+        node[midway,above left]{$r_i=|\mathbf r_i|$};
+
+  % rho_i : perpendicular to the axis
+  \coordinate (F) at (0,3.2);
+  \draw[->,very thick,orange] (F) -- (P)
+        node[midway,above]{$\rho_i$};
+  \draw[dashed] (0,3.2) -- (P);
+  \draw[dashed] (O) -- (F);
+  \pic[draw,angle radius=2.5mm,angle eccentricity=0.55]
+       {right angle=O--F--P};
+
+  % axial coordinate z_i
+  \draw[<->,gray] ($(O)+(-0.45,0)$) -- ($(F)+(-0.45,0)$)
+        node[midway,left]{$z_i$};
+
+  % circular path of the particle
+  \draw[gray,dashed] (P) ++(-2.4,0) arc[start angle=180,end angle=360,radius=2.4];
+
+\end{tikzpicture}
+
+\hrule
+
+\section{Vector rotation}
+
+\begin{tikzpicture}[>=Stealth, scale=1.5, font=\small]
+
+% ---------- parameters ----------
+\coordinate (O) at (0,0);
+\def\Th{37}   % rotation angle (deg)
+\def\Rx{3}    % x-component of r
+\def\Ry{1}    % y-component of r
+\coordinate (R) at (\Rx,\Ry);
+% x' = x cos - y sin,  y' = x sin + y cos
+\pgfmathsetmacro{\Rxp}{\Rx*cos(\Th) - \Ry*sin(\Th)}
+\pgfmathsetmacro{\Ryp}{\Rx*sin(\Th) + \Ry*cos(\Th)}
+\coordinate (Rprime) at (\Rxp,\Ryp);
+% length and angles for the equal-length arc
+\pgfmathsetmacro{\Rlen}{sqrt(\Rx*\Rx+\Ry*\Ry)}
+\pgfmathsetmacro{\AngR}{atan2(\Ry,\Rx)}
+\pgfmathsetmacro{\AngJ}{\AngR+90}
+\pgfmathsetmacro{\AngRp}{\AngR+\Th}
+
+% ---------- axes ----------
+\draw[->,gray!60] (-1.8,0) -- (4.3,0) node[right,black] {$\mathbf i$};
+\draw[->,gray!60] (0,-0.8) -- (0,3.7) node[above,black] {$\mathbf j$};
+\node[below left] at (0,0) {$O$};
+
+% ---------- dashed projections ----------
+\draw[dashed,gray!70] (\Rx,0)  |- (0,\Ry);   % x and y of r
+\draw[dashed,gray!70] (\Rxp,0) |- (0,\Ryp);  % x' and y' of r'
+
+% ---------- tick labels ----------
+\node[below] at (\Rx,0)   {$x$};
+\node[left]  at (0,\Ry)   {$y$};
+\node[below] at (\Rxp,0)  {$x'$};
+\node[left]  at (0,\Ryp)  {$y'$};
+
+% ---------- vectors ----------
+\draw[->,very thick,blue!70!black] (0,0) -- (\Rx,\Ry)
+      node[pos=0.99,right] {$\mathbf r=x\mathbf i+y\mathbf j$};
+\draw[->,very thick,red!75!black] (0,0) -- (\Rxp,\Ryp)
+      node[pos=0.99,right]  {$\mathbf r'=x'\mathbf i+y'\mathbf j$};
+
+% ---------- rotation angle ----------
+\pic[draw,->,angle radius=1.0cm,angle eccentricity=1.5,"$\theta$"]
+     {angle={R--O--Rprime}};
+
+% Jr
+\pgfmathsetmacro{\Jx}{-\Ry}
+\pgfmathsetmacro{\Jy}{\Rx}
+\draw[->,thick,green!50!black] (0,0) -- (\Jx,\Jy)
+      node[pos=0.99,above] {$J\mathbf r$};
+\draw[dashed,green!50!black] (\Jx,0) |- (0,\Jy);
+\node[below] at (\Jx,0)  {$-y$};
+\node[right]  at (0,\Jy)  {$x$};
+
+% ---------- equal-length arc through r, r', Jr ----------
+\draw[gray!50,dashed]
+  (\AngR:\Rlen) arc[start angle=\AngR, end angle=\AngJ, radius=\Rlen];
+\node[gray!70, font=\footnotesize, fill=white, inner sep=1pt]
+  at (\AngR+45:\Rlen+0.55)
+  {$\|J\mathbf r\|=\|\mathbf r\|=\|\mathbf r'\|$};
+
+\end{tikzpicture}
+
+Let
+\[
+\mathbf r=x\mathbf i+y\mathbf j,\qquad
+\mathbf r'=x'\mathbf i+y'\mathbf j,
+\]
+where \(\mathbf r'\) is \(\mathbf r\) rotated counterclockwise by \(\theta\) in
+the orthonormal basis $\{\mathbf i, \mathbf j\}$.
+
+Let \(J\) denote rotation by \(+90^\circ\) counterclockwise. In the fixed basis,
+\[
+J\mathbf i=\mathbf j,
+\qquad
+J\mathbf j=-\mathbf i.
+\]
+
+(And also
+\( J(-\mathbf i)=-J\mathbf i=-\mathbf j, \)
+\( J(-\mathbf j)=-J\mathbf j=\mathbf i. \))
+
+Therefore
+\[
+J\mathbf r=J(x\mathbf i+y\mathbf j)
+=x\mathbf j-y\mathbf i
+=-y\mathbf i+x\mathbf j.
+\]
+The vectors \(\mathbf r\) and \(J\mathbf r\) are orthogonal and have the same length:
+\[
+\mathbf r\cdot J\mathbf r=0, \qquad \|J\mathbf r\|=\|\mathbf r\|.
+\]
+
+The decomposition of $\mathbf r'$ onto the orthogonal basis \(\{\mathbf r,J\mathbf r\}\) is
+\[
+\mathbf r'
+=
+\operatorname{proj}_{\mathbf r}(\mathbf r')
++
+\operatorname{proj}_{J\mathbf r}(\mathbf r').
+\]
+
+\[
+\left(\quad
+\begin{minipage}{0.8\textwidth}
+The vector projection of \(\mathbf a\) onto \(\mathbf b\) is
+
+\[
+\operatorname{proj}_{\mathbf b}(\mathbf a)
+= \frac{\mathbf a\cdot \mathbf b}{\|\mathbf b\|}\frac{\mathbf b}{\|\mathbf b\|}.
+\]
+Note that
+\[
+\|\mathbf b\|\,\|\mathbf b\|=\|\mathbf b\|^2=\mathbf b\cdot\mathbf b,
+\]
+so this can be written as
+\[
+\operatorname{proj}_{\mathbf b}(\mathbf a)
+= \frac{\mathbf a\cdot \mathbf b}{\mathbf b\cdot\mathbf b}\mathbf b.
+\]
+
+Equivalently, if \(\mathbf u=\dfrac{\mathbf b}{\|\mathbf b\|}\) is the unit vector in
+the direction of \(\mathbf b\), then
+
+\[
+\operatorname{proj}_{\mathbf b}(\mathbf a)
+= (\mathbf a\cdot \mathbf u)\mathbf u.
+\]
+\end{minipage}
+\quad\right)
+\]
+
+Using this definition, rewrite
+\[
+\mathbf r'
+=
+\frac{\mathbf r'\cdot\mathbf r}{\mathbf r\cdot\mathbf r}\,\mathbf r
++
+\frac{\mathbf r'\cdot J\mathbf r}{(J\mathbf r)\cdot(J\mathbf r)}\,J\mathbf r.
+\]
+
+Since \(\mathbf r'\) is the rotation of \(\mathbf r\) by \(\theta\)
+it preserves the length \(\|\mathbf r'\|=\|\mathbf r\|,\) and the angle between
+\(\mathbf r'\) and \(\mathbf r\) has cosine \(\cos\theta,\) so by definition
+\[
+\mathbf r'\cdot \mathbf r
+=
+\|\mathbf r'\|\,\|\mathbf r\|\cos\theta
+=
+\|\mathbf r\|^2\cos\theta
+=
+\left(\mathbf r \cdot \mathbf r\right) \cos\theta.
+\]
+
+\(J\mathbf r\) is \(90^\circ\) ahead of \(\mathbf r\) and
+\(\mathbf r'\) is \(\theta\) ahead of \(\mathbf r\), thus
+the angle between \(\mathbf r'\) and \(J\mathbf r\) is
+\[
+90^\circ-\theta.
+\]
+
+The rotation doesn't change the length of \(J\mathbf r\), so
+\(\|\mathbf r'\| = \|J\mathbf r\|,\) and
+\[
+\mathbf r'\cdot J\mathbf r
+=
+\|\mathbf r'\|\,\|J\mathbf r\| \cos(90^\circ-\theta)
+=
+\|J\mathbf r\|^2 \sin\theta
+=
+(J\mathbf r)\cdot(J\mathbf r) \sin\theta.
+\]
+
+These give
+\[
+\frac{\mathbf r'\cdot \mathbf r}{\mathbf r\cdot \mathbf r}
+=
+\cos\theta,
+\qquad
+\frac{\mathbf r'\cdot J\mathbf r}{(J\mathbf r)\cdot(J\mathbf r)}
+=
+\sin\theta,
+\]
+so
+\[
+\mathbf r'=\cos\theta\,\mathbf r+\sin\theta\,J\mathbf r.
+\]
+
+Now substitute \(\mathbf r=x\mathbf i+y\mathbf j\) and \(J\mathbf r=-y\mathbf i+x\mathbf j\):
+\[
+\begin{aligned}
+\mathbf r' &=\cos\theta\,(x\mathbf i+y\mathbf j) +\sin\theta\,(-y\mathbf i+x\mathbf j) \\
+           &=(x\cos\theta-y\sin\theta)\mathbf i +(x\sin\theta+y\cos\theta)\mathbf j.
+\end{aligned}
+\]
+Since
+\[
+\mathbf r'=x'\mathbf i+y'\mathbf j,
+\]
+we read off
+\[
+\begin{aligned}
+x'&=x\cos\theta-y\sin\theta, \\
+y'&=x\sin\theta+y\cos\theta.
+\end{aligned}
+\]
+Therefore
+\[
+\begin{pmatrix}x'\\ y'\end{pmatrix}
+=
+\begin{pmatrix}
+\cos\theta & -\sin\theta\\
+\sin\theta & \cos\theta
+\end{pmatrix}
+\begin{pmatrix}x\\ y\end{pmatrix}.
+\]
+or
+\[
+\mathbf r'
+=
+R \mathbf r.
+\]
+
+Where $R$ is the rotation matrix
+\[
+R=
+\begin{pmatrix}
+\cos\theta & -\sin\theta\\
+\sin\theta & \cos\theta
+\end{pmatrix}.
+\]
+
+Equivalently, using dot products directly from \(\mathbf r'=x'\mathbf i+y'\mathbf j\),
+\[
+\mathbf r'\cdot\mathbf r
+=x'x+y'y
+=(x^2+y^2)\cos\theta,
+\]
+\[
+\mathbf r'\cdot J\mathbf r
+=-x'y+y'x
+=(x^2+y^2)\sin\theta.
+\]
+Solving these two equations for \(x',y'\) gives the same result.
+
+For a \emph{clockwise} rotation, replace \(\theta\) by \(-\theta\),
+which flips the signs of the off-diagonal entries.
 
 \end{document}
