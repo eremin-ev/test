@@ -30,17 +30,28 @@ derivative of \(\mathbf L=I\boldsymbol\omega\), a rotating-frame term appears.
 This means differentiate with respect to time while holding the inertial-frame basis
 vectors fixed.
 
-For each particle $i$,
+For each particle $i$, Newton's second law in inertial frame is
 
 \[
-m_i \ddot{\mathbf r}_i=\mathbf F_i \qquad \mathbf r_i=\mathbf R_i-\mathbf O.
+m_i \ddot{\mathbf R}_i=\mathbf F_i \qquad \mathbf R_i=\mathbf r_i + \mathbf O
 \]
 
+where $\mathbf R_i$ --- \emph{inertial} position vector of particle $i$ relative to some fixed origin,
+$\mathbf O = \mathbf O(t)$ --- reference origin (often an inertial-frame origin, but not necessary)
+relative to the same fixed origin,
+$\mathbf r_i$ --- relative vector position of a particle $i$, not necessarily inertial.
+Substitute $\mathbf R_i$
 
+\[
+m_i \ddot{\mathbf r}_i=\mathbf F_i - m_i \ddot{\mathbf O}.
+\]
 
-$\mathbf R_i$ --- position vector of particle $i$ measured from some fixed
-reference origin $\mathbf O$ (often an inertial-frame origin).
-Let be $\mathbf O = (0, 0)$ for simplicity.
+Let be $\mathbf O = (0, 0)$ for simplicity.  So $\ddot{\mathbf O} = \mathbf 0,$
+$\mathbf r_i$ is inertial, and
+
+\[
+m_i \ddot{\mathbf r}_i=\mathbf F_i.
+\]
 
 Cross with \(\mathbf r_i\) and sum over all particles:
 
@@ -51,10 +62,10 @@ Cross with \(\mathbf r_i\) and sum over all particles:
 \label{eq:newton_cross}
 \end{equation}
 
-Left-hand side: define the total angular momentum about the chosen origin $O$ as
+Define the total angular momentum about the chosen origin $\mathbf O$ as
 
 \[
-\mathbf L
+\mathbf L_O
 =
 \sum_i \mathbf r_i\times m_i\dot{\mathbf r}_i
 =
@@ -65,10 +76,10 @@ Left-hand side: define the total angular momentum about the chosen origin $O$ as
 m_i\dot{\mathbf r}_i.
 \]
 
-Now differentiate \(\mathbf L\) with respect to time. Since \(m_i\) is constant,
+Now differentiate \(\mathbf L_O\) with respect to time. Since \(m_i\) is constant,
 
 \[
-\frac{d\mathbf L}{dt}
+\frac{d\mathbf L_O}{dt}
 =
 \sum_i \frac{d}{dt}\left(\mathbf r_i\times m_i\dot{\mathbf r}_i\right).
 \]
@@ -108,25 +119,29 @@ m_i(\dot{\mathbf r}_i\times \dot{\mathbf r}_i)
 0.
 \]
 
-Therefore, LHS of \eqref{eq:newton_cross} is
+Therefore, the left hand side of \eqref{eq:newton_cross} is
 
 \[
-\frac{d\mathbf L}{dt}
+\frac{d\mathbf L_O}{dt}
 =
 \sum_i \mathbf r_i\times m_i\ddot{\mathbf r}_i.
 \]
 
-The right-hand side of \eqref{eq:newton_cross} is the sum of moments of
-all forces about the chosen origin (torque):
-
+Define the sum of moments of all forces about the chosen origin $\mathbf O$ as
+total torque:
 \[
 \boldsymbol\tau
 =
 \sum_i \mathbf r_i\times \mathbf F_i.
 \]
 
-Now split forces into external and internal:
+%The right-hand side of \eqref{eq:newton_cross} is :
 
+Now split the force acting on particle $i$ into external and internal:
+\[
+\mathbf F_i = \mathbf F_i^{\rm ext} + \mathbf F_i^{\rm int}
+\]
+so
 \[
 \boldsymbol\tau
 =
@@ -139,7 +154,219 @@ Now split forces into external and internal:
 \boldsymbol\tau_{\rm ext} + \boldsymbol\tau_{\rm int}
 \]
 
-For an ideal rigid body, the internal-force term cancels in pairs.  Standard
+\hrule
+
+For an ideal rigid body, the internal-force term cancels in pairs.  Let
+\[
+\mathbf F_{ij}
+\]
+denote the force on particle \(i\) due to particle \(j\).
+Then the total internal force on particle \(i\) is
+\[
+\mathbf F_i^{\rm int}=\sum_{j\ne i}\mathbf F_{ij}.
+\]
+
+The total internal force on the whole system is therefore
+\[
+\mathbf F^{\rm int}
+=
+\sum_i \mathbf F_i^{\rm int}
+=
+\sum_i\sum_{j\ne i}\mathbf F_{ij}.
+\]
+
+Now use Newton’s third law in its pairwise form:
+\[
+\mathbf F_{ij}=-\mathbf F_{ji}, \qquad i\ne j.
+\]
+
+The double sum contains both \(\mathbf F_{ij}\) and \(\mathbf F_{ji}\) for
+every unordered pair $\{i,j\}$.
+
+\[
+\left(\quad
+\begin{minipage}{0.8\textwidth}
+The convention is:
+\begin{itemize}
+\item \((i,j)\) denotes an ordered pair ($(i,j) \ne (j,i)$)
+\item \(\{i,j\}\) denotes an unordered pair, or a set ($\{i,j\}$ and $\{j,i)$) are the same sets)
+\end{itemize}
+\end{minipage}
+\quad\right)
+\]
+
+So group the terms by unordered pairs $\{i,j\}$ where $i<j$
+(using double-sum regrouping identity).  Split the ordered pairs $(i,j),$
+\(i\ne j\), into two classes:
+\[
+i<j \qquad\text{and}\qquad i>j.
+\]
+
+Thus
+
+\[
+\sum_i\sum_{j\ne i}\mathbf F_{ij}
+=
+\sum_{i<j}\mathbf F_{ij}
++
+\sum_{i>j}\mathbf F_{ij}.
+\]
+
+There are $n(n-1)$ ordered pairs $(i,j)$ where $i \ne j$ on the left.
+
+There are $\binom n 2=\frac{n(n-1)}{2}$ unordered pairs $\{i,j\}$ where $i<j$,
+and the same amount of pairs where $i>j$ on the right.  So the number of terms matches:
+\[
+\underbrace{\sum_i\sum_{j\ne i}\mathbf F_{ij}}_{n(n-1)}
+=
+\underbrace{\sum_{i<j}\mathbf F_{ij}}_{\frac{n(n-1)}2}
++
+\underbrace{\sum_{i>j}\mathbf F_{ij}}_{\frac{n(n-1)}2}.
+\]
+
+The two sums are disjoint because no pair $(i,j)$ can satisfy both $i<j$
+and $i>j$. Together they cover exactly all ordered pairs with $i \ne j$.
+
+The second sum:
+
+\[
+\sum_{i>j}\mathbf F_{ij}.
+\]
+
+The map $(i,j) \mapsto (j,i)$ is a bijection from the set of pairs with $i>j$ to
+the set of pairs with \(i<j\). Therefore, by renaming dummy indices,
+
+\[
+\sum_{i>j}\mathbf a_{ij}
+=
+\sum_{i<j}\mathbf a_{ji}.
+\]
+
+Hence
+
+\[
+\begin{aligned}
+S
+&=
+\sum_{i<j}\mathbf a_{ij}
++
+\sum_{i<j}\mathbf a_{ji} \\
+&=
+\boxed{
+\sum_{i<j}\left(\mathbf a_{ij}+\mathbf a_{ji}\right).
+}
+\end{aligned}
+\]
+
+This proves the identity.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\hrule
+
+\[
+\mathbf F^{\rm int}
+=
+\sum_{i<j}
+\left(
+\mathbf F_{ij}+\mathbf F_{ji}
+\right).
+\]
+
+FIXME: not clear, provide an example.
+
+But by Newton’s third law,
+
+\[
+\mathbf F_{ij}+\mathbf F_{ji}
+=
+\mathbf F_{ij}-\mathbf F_{ij}
+=
+0.
+\]
+
+Hence
+
+\[
+\boxed{
+\mathbf F^{\rm int}
+=
+\sum_{i<j}0
+=
+0.
+}
+\]
+
+For example, with three particles,
+
+\[
+\begin{aligned}
+\mathbf F^{\rm int}
+&=
+\mathbf F_{12}+\mathbf F_{13}
++\mathbf F_{21}+\mathbf F_{23}
++\mathbf F_{31}+\mathbf F_{32} \\
+&=
+(\mathbf F_{12}+\mathbf F_{21})
++(\mathbf F_{13}+\mathbf F_{31})
++(\mathbf F_{23}+\mathbf F_{32}) \\
+&=0+0+0=0.
+\end{aligned}
+\]
+
+So “internal forces cancel in pairs” means precisely this: in the **sum over all particles**, every internal force has an equal-and-opposite partner, and the pair cancels.
+
+Two important qualifications:
+
+1. This proves cancellation of the **resultant internal force**. It does not say \(\mathbf F_{ij}=0\) individually. Individual internal forces are generally nonzero; they just cancel pairwise in the total sum.
+
+2. For the **internal torque** to cancel, Newton’s third law in the simple form \(\mathbf F_{ij}=-\mathbf F_{ji}\) is not enough. One also needs the internal forces to be central, i.e.
+
+\[
+\mathbf F_{ij}\parallel \mathbf r_i-\mathbf r_j,
+\]
+
+or one needs an equivalent ideal-constraint assumption for the rigid body. Then
+
+\[
+\boldsymbol\tau^{\rm int}
+=
+\sum_i \mathbf r_i\times \mathbf F_i^{\rm int}
+=
+\sum_{i<j}
+(\mathbf r_i-\mathbf r_j)\times \mathbf F_{ij}
+=
+0.
+\]
+
+So the standard derivation uses:
+
+- Newton’s third law \(\mathbf F_{ij}=-\mathbf F_{ji}\) to kill the resultant internal force;
+- central internal forces, or ideal rigid constraints, to kill the resultant internal torque.
+
+Without those assumptions, the cancellation is not guaranteed.
+
+
+
+
+Standard
 assumption: internal forces are equal and opposite along the line joining the
 particles:
 
@@ -151,7 +378,13 @@ particles:
 \]
 
 because internal forces are equal and opposite and act along the line
-joining the particles (strong form of Newton's third law).  So
+joining the particles (strong form of Newton's third law).
+
+
+
+\hrule
+
+So
 
 \[
 \boldsymbol\tau
@@ -174,7 +407,7 @@ Thus the step gives the angular momentum theorem:
 
 This is often called Euler’s second law, but it is derived from Newton’s laws.
 
-\section{Rigid-body angular momentum: \(\mathbf L=I\boldsymbol\omega\)}
+\section{Rigid-body angular momentum \(\mathbf L\)}
 
 Let the centre of mass be
 
@@ -197,7 +430,7 @@ Then
 \dot{\mathbf r}_i=\dot{\mathbf R}+\dot{\boldsymbol\rho}_i.
 \]
 
-The angular momentum about the origin (by definition) is
+Define the angular momentum about the origin as
 
 \[
 \mathbf L
@@ -205,7 +438,7 @@ The angular momentum about the origin (by definition) is
 \sum_i \mathbf r_i\times m_i\dot{\mathbf r}_i.
 \]
 
- Substitute into the definition
+Substitute $\mathbf r_i$ and $\dot{\mathbf r}_i$ into the definition
 
 \[
 \mathbf L
@@ -218,22 +451,25 @@ The angular momentum about the origin (by definition) is
 Expand the cross product (distribute): for each $i$,
 
 \[
-(\mathbf R + \boldsymbol\rho_i) \times (\dot{\mathbf R} + \dot{\boldsymbol\rho}_i)
+(\mathbf R + \boldsymbol\rho_i) \times m_i(\dot{\mathbf R} + \dot{\boldsymbol\rho}_i)
 =
-\mathbf R \times (\dot{\mathbf R} + \dot{\boldsymbol\rho}_i)
+\mathbf R \times m_i(\dot{\mathbf R} + \dot{\boldsymbol\rho}_i)
 +
-\boldsymbol\rho_i \times (\dot{\mathbf R} + \dot{\boldsymbol\rho}_i).
+\boldsymbol\rho_i \times m_i(\dot{\mathbf R} + \dot{\boldsymbol\rho}_i)=
 \]
 
 \[
 =
-\mathbf R\times\dot{\mathbf R}
-+\mathbf R\times\dot{\boldsymbol\rho}_i
-+\boldsymbol\rho_i\times\dot{\mathbf R}
-+\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i.
+m_i\mathbf R \times \dot{\mathbf R}
++
+m_i\mathbf R \times \dot{\boldsymbol\rho}_i
++
+m_i\boldsymbol\rho_i \times \dot{\mathbf R}
++
+m_i\boldsymbol\rho_i \times \dot{\boldsymbol\rho}_i.
 \]
 
-Multiply by $m_i$ and sum over $i$:
+Sum over $i$:
 
 \[
 \mathbf L
@@ -279,8 +515,10 @@ because \(\sum_i m_i\dot{\boldsymbol\rho}_i=\dfrac{d}{dt}\sum_i m_i\boldsymbol\r
 =
 \mathbf 0\times\dot{\mathbf R}
 =
-\mathbf 0.
+\mathbf 0,
 \]
+
+because \(\sum_i m_i\boldsymbol\rho_i=\mathbf 0\) (see below).
 
 \item This is the only term that survives untouched:
 
@@ -314,8 +552,8 @@ Differentiating with respect to time (masses constant):
 \mathbf 0.
 \]
 
-So both \(\sum_i m_i\boldsymbol\rho_i\) and \(\sum_i
-m_i\dot{\boldsymbol\rho}_i\) vanish identically — this is the mathematical
+So both \(\sum_i m_i\boldsymbol\rho_i\) and
+\(\sum_i m_i\dot{\boldsymbol\rho}_i\) vanish identically — this is the mathematical
 content of "the centre of mass is the mass-weighted mean position."
 
 Putting the four terms together,
@@ -331,14 +569,29 @@ M\,\mathbf R\times\dot{\mathbf R}
 Hence
 
 \[
-\boxed{
-\mathbf L
+\mathbf L_{\rm origin}
 =
-\underbrace{M\,\mathbf R\times\dot{\mathbf R}}_{\text{orbital (CM about origin)}}
+\underbrace{M\,\mathbf R\times\dot{\mathbf R}}_{\mathbf L_{\rm orbital} \text{(CM about origin)}}
 +
 \underbrace{\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i}_{\mathbf L_{\rm CM}\ \text{(spin about CM)}}
-}
 \]
+
+The first term is the angular momentum of the centre of mass about the origin:
+
+\[
+\mathbf L_{\rm orbital}
+=
+M\,\mathbf R\times\dot{\mathbf R}.
+\]
+
+The second term is the angular momentum about the centre of mass (CM):
+
+\[
+\mathbf L_{\rm CM}
+=
+\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i
+\]
+
 
 and therefore
 
@@ -352,41 +605,7 @@ and therefore
 \mathbf P=M\dot{\mathbf R}.
 \]
 
-That is the "substitute the decompositions" step written out in full:
-distribute the cross product, pull origin-independent factors out of the sum,
-and kill the two cross terms using \(\sum_i m_i\boldsymbol\rho_i=\sum_i
-m_i\dot{\boldsymbol\rho}_i=\mathbf 0\).
-
-
 \hrulefill
-
-But by the definition of the centre of mass,
-
-\[
-\sum_i m_i\boldsymbol\rho_i=0,
-\qquad
-\sum_i m_i\dot{\boldsymbol\rho}_i=0.
-\]
-
-So the cross terms vanish, leaving
-
-\[
-\mathbf L_{\rm origin}
-=
-M\mathbf R\times\dot{\mathbf R}
-+
-\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i.
-\]
-
-The first term is the angular momentum of the centre of mass about the origin. The second term is the angular momentum **about the centre of mass**:
-
-\[
-\boxed{
-\mathbf L_{\rm CM}
-=
-\sum_i m_i\,\boldsymbol\rho_i\times\dot{\boldsymbol\rho}_i
-}
-\]
 
 Equivalently,
 
@@ -985,5 +1204,463 @@ Solving these two equations for \(x',y'\) gives the same result.
 
 For a \emph{clockwise} rotation, replace \(\theta\) by \(-\theta\),
 which flips the signs of the off-diagonal entries.
+
+\hrule
+
+Let \(A\) be an inertial origin. Write the inertial position of particle \(i\) as
+\(\mathbf R_i\), and choose an origin point \(O(t)\) whose position vector is \(\mathbf O(t)\). Put
+
+\[
+\mathbf r_i:=\mathbf R_i-\mathbf O .
+\]
+
+The equation written in the question,
+
+\[
+m_i\ddot{\mathbf r}_i=\mathbf F_i,
+\]
+
+is Newton’s law only if \(\ddot{\mathbf O}=0\), i.e. if \(O\) is an inertial origin
+(fixed, or moving uniformly). More generally,
+
+\[
+m_i\ddot{\mathbf R}_i=\mathbf F_i
+\quad\Longrightarrow\quad
+m_i\ddot{\mathbf r}_i=\mathbf F_i-m_i\ddot{\mathbf O}.
+\]
+
+The term \(-m_i\ddot{\mathbf O}\) is the pseudo-force due to using an accelerating origin. This point is important in the “origin choice” discussion below.
+
+Split the force on particle \(i\) into external and internal parts:
+
+\[
+\mathbf F_i=\mathbf F_i^{\rm ext}+\sum_{j\ne i}\mathbf F_{ij},
+\]
+
+with \(\mathbf F_{ij}=-\mathbf F_{ji}\). For a rigid body one also assumes the internal forces are central, so that their net torque cancels.
+
+\hrule
+
+1. Translational Euler law
+
+Sum Newton’s equations in an inertial frame:
+
+\[
+\sum_i m_i\ddot{\mathbf R}_i
+=
+\sum_i \mathbf F_i^{\rm ext}
++
+\sum_i\sum_{j\ne i}\mathbf F_{ij}.
+\]
+
+The internal forces cancel in pairs, so
+
+\[
+\sum_i m_i\ddot{\mathbf R}_i=\mathbf F^{\rm ext}.
+\]
+
+Define total mass and center of mass by
+
+\[
+M=\sum_i m_i,\qquad
+\mathbf R_G=\frac1M\sum_i m_i\mathbf R_i .
+\]
+
+Then
+
+\[
+\boxed{
+M\ddot{\mathbf R}_G=\mathbf F^{\rm ext}
+}
+\]
+
+This is Euler’s first law, or the translational law for a rigid body: the center of mass moves as a point particle of mass \(M\) under the resultant external force.
+
+If one uses a moving origin \(O\), define
+
+\[
+\mathbf r_G:=\mathbf R_G-\mathbf O.
+\]
+
+Then
+
+\[
+M\left(\ddot{\mathbf r}_G+\ddot{\mathbf O}\right)=\mathbf F^{\rm ext},
+\]
+
+or
+
+\[
+\boxed{
+M\ddot{\mathbf r}_G=\mathbf F^{\rm ext}-M\ddot{\mathbf O}.
+}
+\]
+
+Thus the center-of-mass law is independent of the origin only when written in an inertial frame. Relative to an accelerating origin, one must subtract the pseudo-force \(-M\ddot{\mathbf O}\).
+
+\hrule
+
+2. Angular momentum about an arbitrary point \(O\)
+
+Define the angular momentum about \(O\) using relative velocities:
+
+\[
+\mathbf L_O
+=
+\sum_i m_i\,\mathbf r_i\times\dot{\mathbf r}_i,
+\qquad
+\mathbf r_i=\mathbf R_i-\mathbf O .
+\]
+
+Differentiate:
+
+\[
+\dot{\mathbf L}_O
+=
+\sum_i m_i\,\dot{\mathbf r}_i\times\dot{\mathbf r}_i
++
+\sum_i \mathbf r_i\times m_i\ddot{\mathbf r}_i .
+\]
+
+The first term vanishes because \(\dot{\mathbf r}_i\times\dot{\mathbf r}_i=0\). Using the general relative-coordinate Newton equation,
+
+\[
+m_i\ddot{\mathbf r}_i
+=
+\mathbf F_i^{\rm ext}
++
+\sum_{j\ne i}\mathbf F_{ij}
+-
+m_i\ddot{\mathbf O},
+\]
+
+we get
+
+\[
+\dot{\mathbf L}_O
+=
+\sum_i \mathbf r_i\times\mathbf F_i^{\rm ext}
++
+\sum_i \mathbf r_i\times\sum_{j\ne i}\mathbf F_{ij}
+-
+\left(\sum_i m_i\mathbf r_i\right)\times\ddot{\mathbf O}.
+\]
+
+The internal torque cancels for central internal forces:
+
+\[
+\sum_{i<j}
+(\mathbf r_i-\mathbf r_j)\times\mathbf F_{ij}=0.
+\]
+
+Also
+
+\[
+\sum_i m_i\mathbf r_i
+=
+M(\mathbf R_G-\mathbf O).
+\]
+
+Therefore
+
+\[
+\boxed{
+\dot{\mathbf L}_O
+=
+\boldsymbol\tau_O^{\rm ext}
+-
+M(\mathbf R_G-\mathbf O)\times\ddot{\mathbf O}.
+}
+\]
+
+where
+
+\[
+\boldsymbol\tau_O^{\rm ext}
+=
+\sum_i \mathbf r_i\times\mathbf F_i^{\rm ext}
+=
+\sum_i (\mathbf R_i-\mathbf O)\times\mathbf F_i^{\rm ext}.
+\]
+
+This is the general rotational equation about a possibly moving origin \(O\).
+
+Two very important special cases follow immediately.
+
+Case A: \(O\) fixed in an inertial frame
+
+Then \(\ddot{\mathbf O}=0\), so
+
+\[
+\boxed{
+\dot{\mathbf L}_O=\boldsymbol\tau_O^{\rm ext}.
+}
+\]
+
+This is Euler’s second law about a fixed point.
+
+Case B: \(O\) is the center of mass
+
+Then \(\mathbf O=\mathbf R_G\), so \(\mathbf R_G-\mathbf O=0\). Hence
+
+\[
+\boxed{
+\dot{\mathbf L}_G=\boldsymbol\tau_G^{\rm ext}.
+}
+\]
+
+Thus the rotational law also holds about the center of mass, even if the center of mass is accelerating. This is why rigid-body equations are usually written about the CM.
+
+If one instead defines angular momentum using inertial velocities,
+
+\[
+\mathbf H_O=\sum_i(\mathbf R_i-\mathbf O)\times m_i\dot{\mathbf R}_i,
+\]
+
+then the corresponding formula is
+
+\[
+\dot{\mathbf H}_O
+=
+\boldsymbol\tau_O^{\rm ext}
+-
+\dot{\mathbf O}\times\mathbf P,
+\qquad
+\mathbf P=\sum_i m_i\dot{\mathbf R}_i=M\dot{\mathbf R}_G.
+\]
+
+Again the extra term vanishes if \(O\) is fixed or if \(O\) is the CM.
+
+---
+
+3. Rigid-body angular momentum and inertia tensor
+
+Now choose \(O\) to be either
+
+1. the center of mass \(G\), or
+2. a point fixed in both the body and an inertial frame.
+
+Then the position vectors \(\mathbf r_i\) relative to \(O\) are constant in a body-fixed frame. Let \(\boldsymbol\omega\) be the angular velocity of the rigid body. For a rigid body,
+
+\[
+\dot{\mathbf r}_i=\boldsymbol\omega\times\mathbf r_i .
+\]
+
+Therefore
+
+\[
+\mathbf L_O
+=
+\sum_i m_i\,\mathbf r_i\times(\boldsymbol\omega\times\mathbf r_i).
+\]
+
+Use
+
+\[
+\mathbf a\times(\mathbf b\times\mathbf c)
+=
+\mathbf b(\mathbf a\cdot\mathbf c)
+-
+\mathbf c(\mathbf a\cdot\mathbf b),
+\]
+
+to obtain
+
+\[
+\mathbf L_O
+=
+\sum_i m_i
+\left[
+r_i^2\boldsymbol\omega
+-
+\mathbf r_i(\mathbf r_i\cdot\boldsymbol\omega)
+\right].
+\]
+
+Define the inertia tensor about \(O\) by
+
+\[
+\boxed{
+\mathbf I_O
+=
+\sum_i m_i
+\left(
+r_i^2\,\mathbf 1
+-
+\mathbf r_i\mathbf r_i^{\mathsf T}
+\right),
+}
+\]
+
+or in components,
+
+\[
+I_{O,ab}
+=
+\sum_i m_i
+\left(
+r_i^2\delta_{ab}
+-
+r_{ia}r_{ib}
+\right).
+\]
+
+Then
+
+\[
+\boxed{
+\mathbf L_O=\mathbf I_O\boldsymbol\omega .
+}
+\]
+
+In a body-fixed frame, \(\mathbf I_O\) is constant. The rotational equation about \(O\) is therefore
+
+\[
+\boldsymbol\tau_O^{\rm ext}
+=
+\frac{d}{dt}\left(\mathbf I_O\boldsymbol\omega\right),
+\]
+
+valid when \(O\) is fixed in an inertial frame or is the center of mass.
+
+---
+
+4. Euler’s rotational equations
+
+Let a superscript \(B\) denote components in the body-fixed frame. Since the body frame rotates with angular velocity \(\boldsymbol\omega\), the inertial time derivative of any vector \(\mathbf A\) has body-frame components
+
+\[
+\left(\frac{d\mathbf A}{dt}\right)_{\!B}
+=
+\dot{\mathbf A}^{B}
++
+\boldsymbol\omega^{B}\times\mathbf A^{B}.
+\]
+
+Apply this to \(\mathbf L_O=\mathbf I_O\boldsymbol\omega\). In the body frame, \(\mathbf I_O^{B}\) is constant, so
+
+\[
+\left(\frac{d\mathbf L_O}{dt}\right)^{B}
+=
+\mathbf I_O^{B}\dot{\boldsymbol\omega}^{B}
++
+\boldsymbol\omega^{B}
+\times
+\left(\mathbf I_O^{B}\boldsymbol\omega^{B}\right).
+\]
+
+Thus
+
+\[
+\boxed{
+\boldsymbol\tau_O^{B}
+=
+\mathbf I_O^{B}\dot{\boldsymbol\omega}^{B}
++
+\boldsymbol\omega^{B}
+\times
+\left(\mathbf I_O^{B}\boldsymbol\omega^{B}\right).
+}
+\]
+
+This is the vector form of Euler’s equations for a rigid body, about either the center of mass or a fixed point.
+
+If the body axes are chosen as principal axes of inertia, then
+
+\[
+\mathbf I_O^{B}
+=
+\operatorname{diag}(I_1,I_2,I_3),
+\]
+
+and the equations become
+
+\[
+\boxed{
+\begin{aligned}
+\tau_1 &= I_1\dot\omega_1-(I_2-I_3)\omega_2\omega_3,\\[2mm]
+\tau_2 &= I_2\dot\omega_2-(I_3-I_1)\omega_3\omega_1,\\[2mm]
+\tau_3 &= I_3\dot\omega_3-(I_1-I_2)\omega_1\omega_2.
+\end{aligned}
+}
+\]
+
+Equivalently,
+
+\[
+\begin{aligned}
+\tau_1 &= I_1\dot\omega_1+(I_3-I_2)\omega_2\omega_3,\\
+\tau_2 &= I_2\dot\omega_2+(I_1-I_3)\omega_3\omega_1,\\
+\tau_3 &= I_3\dot\omega_3+(I_2-I_1)\omega_1\omega_2.
+\end{aligned}
+\]
+
+Here \(I_1,I_2,I_3\) are the principal moments of inertia about \(O\), and \(\boldsymbol\tau_O\) is the external torque about \(O\).
+
+---
+
+5. Origin choice: summary
+
+- Newton’s laws are simplest in an inertial frame. If \(\mathbf r_i=\mathbf R_i-\mathbf O\), then
+  \[
+  m_i\ddot{\mathbf r}_i=\mathbf F_i
+  \]
+  only when \(\ddot{\mathbf O}=0\). For an accelerating origin,
+  \[
+  m_i\ddot{\mathbf r}_i=\mathbf F_i-m_i\ddot{\mathbf O}.
+  \]
+
+- The translational law
+  \[
+  M\ddot{\mathbf R}_G=\mathbf F^{\rm ext}
+  \]
+  is independent of the choice of origin when written in an inertial frame.
+
+- The rotational law
+  \[
+  \dot{\mathbf L}_O=\boldsymbol\tau_O^{\rm ext}
+  \]
+  holds cleanly when \(O\) is fixed in an inertial frame or when \(O\) is the center of mass. For an arbitrary moving origin,
+  \[
+  \dot{\mathbf L}_O
+  =
+  \boldsymbol\tau_O^{\rm ext}
+  -
+  M(\mathbf R_G-\mathbf O)\times\ddot{\mathbf O}.
+  \]
+
+- For Euler’s rigid-body equations
+  \[
+  \boldsymbol\tau_O
+  =
+  \mathbf I_O\dot{\boldsymbol\omega}
+  +
+  \boldsymbol\omega\times(\mathbf I_O\boldsymbol\omega),
+  \]
+  one usually takes \(O=G\), the center of mass, or \(O\) a fixed pivot point. About the CM, translation and rotation decouple. About a fixed point, the point has zero acceleration, so the simple rotational equation remains valid, but the inertia tensor is taken about that fixed point.
+
+Thus the two Euler laws are
+
+\[
+\boxed{
+M\ddot{\mathbf R}_G=\mathbf F^{\rm ext},
+}
+\]
+
+and, about the center of mass or a fixed point,
+
+\[
+\boxed{
+\boldsymbol\tau_O^{\rm ext}
+=
+\frac{d}{dt}\left(\mathbf I_O\boldsymbol\omega\right)
+=
+\mathbf I_O\dot{\boldsymbol\omega}
++
+\boldsymbol\omega\times(\mathbf I_O\boldsymbol\omega).
+}
+\]
+
+These follow directly from Newton’s second law for the individual particles, with the internal forces cancelling in both the resultant force and the resultant torque.
 
 \end{document}
